@@ -6,7 +6,7 @@ public class MyBootstrap : CustomWorldBootstrap
 {
     public MyBootstrap()
     {
-        // At the moment, only need to do this if you want an empty work with no systems
+        // At the moment, only need to do this if you want an empty world with no systems
         SetOptions(new List<WorldOptions> { new WorldOptions("Custom World Name") });
     }
 }
