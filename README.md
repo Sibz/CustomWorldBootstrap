@@ -1,83 +1,48 @@
 # CustomWorldBootstrap
 
+Put in your own bootstrap file:
+```csharp
+public class MyBootstrap : CustomWorldBootstrap
+{
+    public MyBootstrap()
+    {
+        // At the moment, only need to do this if you want an empty work with no systems
+        SetOptions(new List<WorldOptions> { new WorldOptions("Custom World Name") });
+    }
+}
+```
+
+Add custom group:
 ```csharp
 [UpdateInGroup(typeof(InitializationSystemGroup))]
+[CreateOnlyInWorld("SettingsWorld")]
 public class MyCustomGroup : ComponentSystemGroup
 {
 
 }
+```
 
-
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-public class MyCustomGroup2 : ComponentSystemGroup
-{
-
-}
-
-
-
-[UpdateInGroup(typeof(PresentationSystemGroup))]
-public class MyCustomGroup3 : ComponentSystemGroup
-{
-
-}
-
-[UpdateInGroup(typeof(MyCustomGroup3))]
-public class MyCustomGroup4 : ComponentSystemGroup
-{
-
-}
-
-
-
-[UpdateInGroup(typeof(MyCustomGroup4))]
+Create systems:
+```csharp
+[UpdateInGroup(typeof(MyCustomGroup))]
 [CreateOnlyInWorld("SettingsWorld")]
 public class TestSettingsSystem : ComponentSystem
 {
     protected override void OnUpdate()
     {
-        // Debug.Log("Running");
+        // do stuff
     }
 }
 
-[UpdateInGroup(typeof(MyCustomGroup2))]
+[UpdateInGroup(typeof(MyCustomGroup))]
+[UpdateBefore(typeof(TestSettingsSystem))]
 [CreateOnlyInWorld("SettingsWorld")]
 public class TestSettingsSystem2 : ComponentSystem
 {
     protected override void OnUpdate()
     {
-        // Debug.Log("Running");
-    }
-}
-[UpdateInGroup(typeof(MyCustomGroup))]
-[CreateOnlyInWorld("SettingsWorld")]
-public class TestSettingsSystem3 : ComponentSystem
-{
-    protected override void OnUpdate()
-    {
-        // Debug.Log("Running");
+        // do stuff
     }
 }
 
-[UpdateInGroup(typeof(MyCustomGroup))]
-[UpdateAfter(typeof(TestSettingsSystem3))]
-[CreateOnlyInWorld("SettingsWorld")]
-public class TestSettingsSystem4 : ComponentSystem
-{
-    protected override void OnUpdate()
-    {
-        // Debug.Log("Running");
-    }
-}
-
-[UpdateInGroup(typeof(MyCustomGroup))]
-[UpdateBefore(typeof(TestSettingsSystem3))]
-[CreateOnlyInWorld("SettingsWorld")]
-public class TestSettingsSystem5 : ComponentSystem
-{
-    protected override void OnUpdate()
-    {
-        // Debug.Log("Running");
-    }
-}
 ```
