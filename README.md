@@ -12,11 +12,11 @@ public class MyBootstrap : CustomWorldBootstrap
 }
 ```
 
-Add custom group:
+Add custom group (Optional, systems can also `UpdateInGroup(typeof(InitializationSystemGroup))`):
 ```csharp
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 [CreateOnlyInWorld("SettingsWorld")]
-public class MyCustomGroup : ComponentSystemGroup
+public class MyCustomGroup : ComponentSystemGroup)
 {
 
 }
