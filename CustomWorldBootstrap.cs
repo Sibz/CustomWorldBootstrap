@@ -17,8 +17,6 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
 
     public List<Type> Initialize(List<Type> systems)
     {
-        WorldController.MainWorld = World.Active;
-
         //SystemInfo info = new SystemInfo(systems, new List<WorldOptions>() { new WorldOptions("SettingsWorld", true) });//m_WorldOptions);
         SystemInfo info = new SystemInfo(systems, m_WorldOptions);
 
