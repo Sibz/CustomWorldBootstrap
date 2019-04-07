@@ -22,7 +22,10 @@ public class MyCustomGroup : ComponentSystemGroup)
 }
 ```
 
-Create systems:
+## Systems
+Tag systems with `[CreateOnlyInWorld("Custom World Name")]` this will create the world if not specified in *WorldOptions*.
+Systems can contain *UpdateInGroup*, *UpdateBefore* and *UpdateAfter*.
+If *UpdateInGroup* is omitted then it is created in the default `SimulationSystemGroup`.
 ```csharp
 [UpdateInGroup(typeof(MyCustomGroup))]
 [CreateOnlyInWorld("SettingsWorld")]
