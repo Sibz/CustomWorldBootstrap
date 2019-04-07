@@ -1,5 +1,5 @@
 ﻿/*
- * v1.0.2
+ * v1.0.3
  * */
 
 using System;
@@ -15,18 +15,16 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
     private List<WorldOptions> m_WorldOptions;
     private Dictionary<string, World> m_CustomWorlds = new Dictionary<string, World>();
     public IReadOnlyDictionary<string, World> Worlds => m_CustomWorlds;
+    private bool m_CreateDefaultWorld = false;
 
     public virtual void PostInitialize()
     {
-        
-    }
-    public virtual void PostWorldInitialize(World world)
-    {
-        
+
     }
 
-    public void SetOptions(List<WorldOptions> worldOptions = null)
+    public void SetOptions(List<WorldOptions> worldOptions = null, bool createDefaultWorld = true)
     {
+        m_CreateDefaultWorld = createDefaultWorld;
         m_WorldOptions = worldOptions ?? new List<WorldOptions>();
     }
 
@@ -34,13 +32,13 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
     {
         m_CustomWorlds.Add(World.Active.Name, World.Active);
 
-        SystemInfo info = new SystemInfo(m_CustomWorlds, systems, m_WorldOptions);
+        SystemInfo info = new SystemInfo(m_CustomWorlds, systems, m_WorldOptions, m_CreateDefaultWorld);
 
         foreach (World w in info.CustomWorlds.Values)
         {
-            if (w.Name!=World.Active.Name)
-                PostWorldInitialize(w);
             ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
+            if (m_WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
+                m_WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
         }
         PostInitialize();
         return info.DefaultWorldSystems;
@@ -53,18 +51,20 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
         public Dictionary<string, List<Type>> WorldSystems = new Dictionary<string, List<Type>>();
         public List<WorldOptions> CustomWorldOptions;
         public Dictionary<string, World> CustomWorlds = new Dictionary<string, World>();
+        private bool m_CreateDefaultWorld = false;
 
-        public SystemInfo(Dictionary<string, World> customWorlds, List<Type> systemTypes, List<WorldOptions> customWorldOptions = null)
+        public SystemInfo(Dictionary<string, World> customWorlds, List<Type> systemTypes, List<WorldOptions> customWorldOptions, bool createDefaultWorld)
         {
             SystemTypes = systemTypes;
             CustomWorlds = customWorlds;
+            m_CreateDefaultWorld = createDefaultWorld;
 
             CustomWorldOptions = customWorldOptions ?? new List<WorldOptions>();
 
             var customWorldNames = SystemTypes
-                .Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateOnlyInWorldAttribute)))
+                .Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)))
                 .Select(x => x.CustomAttributes
-                    .Where(n => n.AttributeType.Name == nameof(CreateOnlyInWorldAttribute))
+                    .Where(n => n.AttributeType.Name == nameof(CreateInWorldAttribute))
                     .FirstOrDefault().ConstructorArguments[0].ToString().Trim('"'))
                 .Distinct();
 
@@ -81,7 +81,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
                 CustomWorldOptions.Add(WorldOptions.Default());
             }
 
-            var defaultSystemTypes = SystemTypes.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateOnlyInWorldAttribute)));
+            var defaultSystemTypes = SystemTypes.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
 
             foreach (var worldOptions in CustomWorldOptions)
             {
@@ -90,25 +90,10 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
                     CustomWorlds.Add(worldOptions.Name, new World(worldOptions.Name));
                     WorldSystems.Add(worldOptions.Name, new List<Type>());
                 }
-                if (worldOptions.CreateDefaultSystems)
+                if (m_CreateDefaultWorld && worldOptions.Name == "Default World")
                 {
-                    if (worldOptions.Name == "Default World")
-                    {
-                        DefaultWorldSystems = defaultSystemTypes.ToList();
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("Creating default systems in custom world is not supported due to a bug in unity code");
-                        //foreach (var system in defaultSystemTypes)
-                        //{
-                        //    if (!(system == typeof(InitializationSystemGroup) ||
-                        //          system == typeof(SimulationSystemGroup) ||
-                        //          system == typeof(PresentationSystemGroup)))
-                        //    {
-                        //        CreateSystemInWorld(worldOptions.Name, system);
-                        //    }
-                        //}
-                    }
+                    DefaultWorldSystems = defaultSystemTypes.ToList();
+                    continue;
                 }
 
                 var worldSystemTypes = GetSystemTypesIncludingUpdateInGroupAncestors(worldOptions.Name);
@@ -156,7 +141,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
 
         private IEnumerable<Type> GetSystemTypesIncludingUpdateInGroupAncestors(string worldName)
         {
-            var worldSystemTypes = SystemTypes.Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateOnlyInWorldAttribute) && n.ConstructorArguments[0].ToString().Trim('"') == worldName)).ToList();
+            var worldSystemTypes = SystemTypes.Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute) && n.ConstructorArguments[0].ToString().Trim('"') == worldName)).ToList();
             List<Type> results = new List<Type>();
             foreach (var type in worldSystemTypes)
             {
@@ -198,8 +183,17 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
         }
         private T GetCustomAttributeFirstArg<T>(Type type, string name)
         {
-            return (T)type.CustomAttributes
-                .Where(x => x.AttributeType.Name == name).FirstOrDefault()
+            var firstAttributeByName = type.CustomAttributes
+                .Where(x => x.AttributeType.Name == name).FirstOrDefault();
+            if (firstAttributeByName == null)
+            {
+                throw new Exception(string.Format("Class {0} does not have attribute {1}", type.Name, name));
+            }
+            if (firstAttributeByName.ConstructorArguments.Count == 0)
+            {
+                throw new Exception(string.Format("Class {0} has Attribute {1} but no argument", type.Name, name));
+            }
+            return (T)firstAttributeByName
                 .ConstructorArguments[0].Value;
         }
         private bool IsComponentSystemGroup(Type type)
@@ -222,17 +216,15 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
     {
         public string Name;
         /// <summary>
-        /// This isn't yet supported due to bug
-        /// </summary>
-        public bool CreateDefaultSystems;
-        /// <summary>
         /// This is not yet implemented
         /// </summary>
         public List<Type> FilterTypes;
+
+        public Action<World> OnInitialize;
+
         public WorldOptions(string name, bool createDefaultSystems = false, List<Type> filterTypes = null)
         {
             Name = name;
-            CreateDefaultSystems = createDefaultSystems;
             FilterTypes = filterTypes ?? new List<Type>();
         }
         public static WorldOptions Default()
