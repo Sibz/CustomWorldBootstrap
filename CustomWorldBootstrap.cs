@@ -15,7 +15,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
     public readonly List<WorldOption> WorldOptions = new List<WorldOption>();
     private Dictionary<string, World> m_CustomWorlds = new Dictionary<string, World>();
     public IReadOnlyDictionary<string, World> Worlds => m_CustomWorlds;
-    public bool CreateDefaultWorld = false;
+    public bool CreateDefaultWorld = true;
 
     public static World DefaultWorld;
 
@@ -60,7 +60,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
         public Dictionary<string, List<Type>> WorldSystems = new Dictionary<string, List<Type>>();
         public List<WorldOption> CustomWorldOptions;
         public Dictionary<string, World> CustomWorlds = new Dictionary<string, World>();
-        private bool m_CreateDefaultWorld = false;
+        private bool m_CreateDefaultWorld = true;
 
         public SystemInfo(Dictionary<string, World> customWorlds, List<Type> systemTypes, List<WorldOption> customWorldOptions, bool createDefaultWorld)
         {
