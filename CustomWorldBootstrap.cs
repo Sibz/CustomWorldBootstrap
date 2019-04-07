@@ -1,5 +1,5 @@
 ﻿/*
- * v1.0.4
+ * v1.0.5
  * */
 
 using System;
@@ -45,7 +45,9 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
         {
             ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
             if (WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
+            {
                 WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
+            }
         }
         PostInitialize();
         return info.DefaultWorldSystems;
@@ -97,9 +99,12 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
                     CustomWorlds.Add(worldOptions.Name, new World(worldOptions.Name));
                     WorldSystems.Add(worldOptions.Name, new List<Type>());
                 }
-                if (m_CreateDefaultWorld && worldOptions.Name == "Default World")
+                if (worldOptions.Name == "Default World")
                 {
-                    DefaultWorldSystems = defaultSystemTypes.ToList();
+                    if (m_CreateDefaultWorld)
+                    {
+                        DefaultWorldSystems = defaultSystemTypes.ToList();
+                    }
                     continue;
                 }
 
