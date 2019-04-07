@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*
+ * v1.0.1
+ * */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +13,8 @@ using UnityEngine;
 public abstract class CustomWorldBootstrap : ICustomBootstrap
 {
     private List<WorldOptions> m_WorldOptions;
+    private Dictionary<string, World> m_CustomWorlds = new Dictionary<string, World>();
+    public IReadOnlyDictionary<string, World> Worlds => m_CustomWorlds;
 
     public void SetOptions(List<WorldOptions> worldOptions = null)
     {
@@ -17,8 +23,9 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
 
     public List<Type> Initialize(List<Type> systems)
     {
-        //SystemInfo info = new SystemInfo(systems, new List<WorldOptions>() { new WorldOptions("SettingsWorld", true) });//m_WorldOptions);
-        SystemInfo info = new SystemInfo(systems, m_WorldOptions);
+        m_CustomWorlds.Add(World.Active.Name, World.Active);
+
+        SystemInfo info = new SystemInfo(m_CustomWorlds, systems, m_WorldOptions);
 
         foreach (World w in info.CustomWorlds.Values)
         {
@@ -35,9 +42,10 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
         public List<WorldOptions> CustomWorldOptions;
         public Dictionary<string, World> CustomWorlds = new Dictionary<string, World>();
 
-        public SystemInfo(List<Type> systemTypes, List<WorldOptions> customWorldOptions = null)
+        public SystemInfo(Dictionary<string, World> customWorlds, List<Type> systemTypes, List<WorldOptions> customWorldOptions = null)
         {
             SystemTypes = systemTypes;
+            CustomWorlds = customWorlds;
 
             CustomWorldOptions = customWorldOptions ?? new List<WorldOptions>();
 
