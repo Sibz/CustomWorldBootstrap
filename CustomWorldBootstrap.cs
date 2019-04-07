@@ -1,5 +1,5 @@
 ﻿/*
- * v1.0.1
+ * v1.0.2
  * */
 
 using System;
@@ -16,6 +16,15 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
     private Dictionary<string, World> m_CustomWorlds = new Dictionary<string, World>();
     public IReadOnlyDictionary<string, World> Worlds => m_CustomWorlds;
 
+    public virtual void PostInitialize()
+    {
+        
+    }
+    public virtual void PostWorldInitialize(World world)
+    {
+        
+    }
+
     public void SetOptions(List<WorldOptions> worldOptions = null)
     {
         m_WorldOptions = worldOptions ?? new List<WorldOptions>();
@@ -29,8 +38,11 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
 
         foreach (World w in info.CustomWorlds.Values)
         {
+            if (w.Name!=World.Active.Name)
+                PostWorldInitialize(w);
             ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
         }
+        PostInitialize();
         return info.DefaultWorldSystems;
     }
 
