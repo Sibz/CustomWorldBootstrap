@@ -1,5 +1,5 @@
 ﻿/*
- * v1.0.3
+ * v1.0.4
  * */
 
 using System;
@@ -12,33 +12,40 @@ using UnityEngine;
 
 public abstract class CustomWorldBootstrap : ICustomBootstrap
 {
-    private List<WorldOptions> m_WorldOptions;
+    public readonly List<WorldOption> WorldOptions = new List<WorldOption>();
     private Dictionary<string, World> m_CustomWorlds = new Dictionary<string, World>();
     public IReadOnlyDictionary<string, World> Worlds => m_CustomWorlds;
-    private bool m_CreateDefaultWorld = false;
+    public bool CreateDefaultWorld = false;
+
+    public static World DefaultWorld;
 
     public virtual void PostInitialize()
     {
 
     }
 
-    public void SetOptions(List<WorldOptions> worldOptions = null, bool createDefaultWorld = true)
+    [Obsolete("Use class properties instead (WorldOptionList & CreateDefaultWorld")]
+    public void SetOptions(List<WorldOption> worldOptions = null, bool createDefaultWorld = true)
     {
-        m_CreateDefaultWorld = createDefaultWorld;
-        m_WorldOptions = worldOptions ?? new List<WorldOptions>();
+        CreateDefaultWorld = createDefaultWorld;
+        if (worldOptions != null)
+        {
+            WorldOptions.AddRange(worldOptions);
+        }
     }
 
     public List<Type> Initialize(List<Type> systems)
     {
+        DefaultWorld = World.Active;
         m_CustomWorlds.Add(World.Active.Name, World.Active);
 
-        SystemInfo info = new SystemInfo(m_CustomWorlds, systems, m_WorldOptions, m_CreateDefaultWorld);
+        SystemInfo info = new SystemInfo(m_CustomWorlds, systems, WorldOptions, CreateDefaultWorld);
 
         foreach (World w in info.CustomWorlds.Values)
         {
             ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
-            if (m_WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
-                m_WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
+            if (WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
+                WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
         }
         PostInitialize();
         return info.DefaultWorldSystems;
@@ -49,17 +56,17 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
         public List<Type> SystemTypes;
         public List<Type> DefaultWorldSystems = null;
         public Dictionary<string, List<Type>> WorldSystems = new Dictionary<string, List<Type>>();
-        public List<WorldOptions> CustomWorldOptions;
+        public List<WorldOption> CustomWorldOptions;
         public Dictionary<string, World> CustomWorlds = new Dictionary<string, World>();
         private bool m_CreateDefaultWorld = false;
 
-        public SystemInfo(Dictionary<string, World> customWorlds, List<Type> systemTypes, List<WorldOptions> customWorldOptions, bool createDefaultWorld)
+        public SystemInfo(Dictionary<string, World> customWorlds, List<Type> systemTypes, List<WorldOption> customWorldOptions, bool createDefaultWorld)
         {
             SystemTypes = systemTypes;
             CustomWorlds = customWorlds;
             m_CreateDefaultWorld = createDefaultWorld;
 
-            CustomWorldOptions = customWorldOptions ?? new List<WorldOptions>();
+            CustomWorldOptions = customWorldOptions ?? new List<WorldOption>();
 
             var customWorldNames = SystemTypes
                 .Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)))
@@ -72,13 +79,13 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
             {
                 if (!CustomWorldOptions.Any(x => x.Name == worldname))
                 {
-                    CustomWorldOptions.Add(new WorldOptions(worldname));
+                    CustomWorldOptions.Add(new WorldOption(worldname));
                 }
             }
 
             if (!CustomWorldOptions.Any(x => x.Name == "Default World"))
             {
-                CustomWorldOptions.Add(WorldOptions.Default());
+                CustomWorldOptions.Add(WorldOption.DefaultWorld());
             }
 
             var defaultSystemTypes = SystemTypes.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
@@ -212,24 +219,23 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
         }
     }
 
-    public class WorldOptions
+    public class WorldOption
     {
         public string Name;
         /// <summary>
         /// This is not yet implemented
         /// </summary>
-        public List<Type> FilterTypes;
+        public List<Type> FilterTypes = new List<Type>();
 
         public Action<World> OnInitialize;
 
-        public WorldOptions(string name, bool createDefaultSystems = false, List<Type> filterTypes = null)
+        public WorldOption(string name)
         {
             Name = name;
-            FilterTypes = filterTypes ?? new List<Type>();
         }
-        public static WorldOptions Default()
+        public static WorldOption DefaultWorld()
         {
-            return new WorldOptions("Default World", true);
+            return new WorldOption("Default World");
         }
     }
 }
