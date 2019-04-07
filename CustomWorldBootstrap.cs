@@ -1,5 +1,5 @@
 ﻿/*
- * v1.0.6
+ * v1.0.7
  * */
 
 using System;
@@ -19,19 +19,9 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
 
     public static World DefaultWorld;
 
-    public virtual void PostInitialize()
+    public virtual List<Type> PostInitialize(List<Type> systems)
     {
-
-    }
-
-    [Obsolete("Use class properties instead (WorldOptionList & CreateDefaultWorld")]
-    public void SetOptions(List<WorldOption> worldOptions = null, bool createDefaultWorld = true)
-    {
-        CreateDefaultWorld = createDefaultWorld;
-        if (worldOptions != null)
-        {
-            WorldOptions.AddRange(worldOptions);
-        }
+        return systems;
     }
 
     public List<Type> Initialize(List<Type> systems)
@@ -49,8 +39,8 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
                 WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
             }
         }
-        PostInitialize();
-        return info.DefaultWorldSystems;
+
+        return PostInitialize(info.DefaultWorldSystems);
     }
 
     private class SystemInfo
