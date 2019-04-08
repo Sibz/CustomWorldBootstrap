@@ -1,4 +1,8 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿.
+.
+
+<a href="http://tcci.3utilities.com/viewType.html?buildTypeId=CustomWorldBootstrap_Build&guest=1"> 
+<img src="http://tcci.3utilities.com/app/rest/builds/buildType(id:CustomWorldBootstrap_Build)/statusIcon"/>
+</a>
 
 # CustomWorldBootstrap
 
