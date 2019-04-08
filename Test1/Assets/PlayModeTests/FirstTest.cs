@@ -22,7 +22,12 @@ namespace Tests
             // Use the Assert class to test conditions
             Assert.IsTrue(true);
         }
-
+        [Test]
+        public void NewTestScriptSimplePasses3()
+        {
+            // Use the Assert class to test conditions
+            Assert.IsTrue(true);
+        }
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         // `yield return null;` to skip a frame.
         [UnityTest]
