@@ -3,6 +3,7 @@
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
+[Ll]ogs/
 Assets/AssetStoreTools*
 
 # Visual Studio cache directory
@@ -35,8 +36,6 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
-settings.entities
-[Uu]nity*.csproj
-Assembly-CSharp.csproj
-Assets/settings.entities.meta
-Assets/EntityCache/Resources.meta
+*.csproj
+*.sln
+
