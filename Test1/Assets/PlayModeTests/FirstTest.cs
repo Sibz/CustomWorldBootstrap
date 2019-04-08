@@ -10,7 +10,6 @@ namespace Tests
     {
         // A Test behaves as an ordinary method
         [Test]
-        [UnityPlatform(RuntimePlatform.WindowsPlayer)]
         public void NewTestScriptSimplePasses()
         {
             // Use the Assert class to test conditions
@@ -20,7 +19,6 @@ namespace Tests
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         // `yield return null;` to skip a frame.
         [UnityTest]
-        [UnityPlatform(RuntimePlatform.WindowsPlayer)]
         public IEnumerator NewTestScriptWithEnumeratorPasses()
         {
             // Use the Assert class to test conditions.
