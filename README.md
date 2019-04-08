@@ -79,7 +79,7 @@ public class MyBootstrap : CustomWorldBootstrap
 
     public void OnMyWorldInitialise(World world)
     {
-        // Do stuff once when all systems have been created.
+        // Do stuff once wiht this world when all systems have been created.
     } 
 }
 
