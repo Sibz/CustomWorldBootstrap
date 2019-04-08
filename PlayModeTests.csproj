@@ -11,7 +11,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{89556792-63FC-E004-10DC-2DDC63718BBF}</ProjectGuid>
+    <ProjectGuid>{78DC2BD2-E885-6BE0-B76E-7BE292C0F896}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>PlayModeTests</AssemblyName>
@@ -62,11 +62,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\PlayModeTests\FirstTest.cs" />
-    <Compile Include="Assets\PlayModeTests\NewTestScript.cs" />
+    <Compile Include="Assets\PlayModeTests\Default World Only\DefaultWorldOnlyTest.cs" />
     <None Include="Assets\PlayModeTests\PlayModeTests.asmdef" />
     <Reference Include="Unity.Entities">
-      <HintPath>C:/Users/steve/UnityProjects/CustomWorldBootstrap/Test1/Library/ScriptAssemblies/Unity.Entities.dll</HintPath>
+      <HintPath>C:/Users/steve/UnityProjects/CustomWorldBootstrap/Library/ScriptAssemblies/Unity.Entities.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.2.0a9/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
@@ -270,7 +269,7 @@
       <HintPath>C:/Program Files (x86)/Microsoft Visual Studio Tools for Unity/15.0/Editor/SyntaxTree.VisualStudio.Unity.Bridge.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>C:/Users/steve/UnityProjects/CustomWorldBootstrap/Test1/Library/PackageCache/com.unity.collections@0.0.9-preview.17/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <HintPath>C:/Users/steve/UnityProjects/CustomWorldBootstrap/Library/PackageCache/com.unity.collections@0.0.9-preview.17/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.2.0a9/Editor/Data/NetStandard/ref/2.0.0/netstandard.dll</HintPath>
