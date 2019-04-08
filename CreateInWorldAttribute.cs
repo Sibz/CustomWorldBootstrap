@@ -10,7 +10,6 @@ public class CreateInWorldAttribute : Attribute
     public string Name;
     public CreateInWorldAttribute(string name)
     {
-    test broken build
         Name = name;
     }
 }
