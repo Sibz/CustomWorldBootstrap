@@ -38,4 +38,4 @@ sysinfo.txt
 
 *.csproj
 *.sln
-
+Assets/Scripts/*.meta
