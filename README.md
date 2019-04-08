@@ -1,7 +1,7 @@
 .
 
-<a href="http://teamcity/viewType.html?buildTypeId=myID&guest=1"> 
-<img src="http://teamcity/app/rest/builds/buildType(id:myID)/statusIcon"/>
+<a href="http://tcci.3utilities.com/viewType.html?buildTypeId=myID&guest=1"> 
+<img src="http://tcci.3utilities.com/app/rest/builds/buildType(id:myID)/statusIcon"/>
 </a>
 
 # CustomWorldBootstrap
