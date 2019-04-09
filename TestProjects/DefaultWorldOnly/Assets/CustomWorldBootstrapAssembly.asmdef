@@ -1,0 +1,16 @@
+{
+    "name": "CustomWorldBootstrapAssembly",
+    "references": [
+        "Unity.Entities",
+        "Unity.Entities.Hybrid"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
