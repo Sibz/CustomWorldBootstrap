@@ -1,5 +1,5 @@
 {
-    "name": "NewAssembly",
+    "name": "CustomWorldBootstrapAssembly",
     "references": [
         "Unity.Entities",
         "Unity.Entities.Hybrid"
