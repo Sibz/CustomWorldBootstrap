@@ -19,6 +19,10 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
 
     public static World DefaultWorld;
 
+
+    public static Exception InitializeException;
+
+
     public virtual List<Type> PostInitialize(List<Type> systems)
     {
         return systems;
@@ -26,21 +30,29 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap
 
     public List<Type> Initialize(List<Type> systems)
     {
-        DefaultWorld = World.Active;
-        m_CustomWorlds.Add(World.Active.Name, World.Active);
-
-        SystemInfo info = new SystemInfo(m_CustomWorlds, systems, WorldOptions, CreateDefaultWorld);
-
-        foreach (World w in info.CustomWorlds.Values)
+        try
         {
-            ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
-            if (WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
-            {
-                WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
-            }
-        }
+            DefaultWorld = World.Active;
+            m_CustomWorlds.Add(World.Active.Name, World.Active);
 
-        return PostInitialize(info.DefaultWorldSystems);
+            SystemInfo info = new SystemInfo(m_CustomWorlds, systems, WorldOptions, CreateDefaultWorld);
+
+            foreach (World w in info.CustomWorlds.Values)
+            {
+                ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
+                if (WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
+                {
+                    WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
+                }
+            }
+
+            return PostInitialize(info.DefaultWorldSystems);
+        } catch (Exception e)
+        {
+            Debug.LogError(e);
+            InitializeException = e;
+        }
+        return systems;
     }
 
     private class SystemInfo

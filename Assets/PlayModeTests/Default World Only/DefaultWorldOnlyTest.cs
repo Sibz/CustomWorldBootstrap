@@ -6,10 +6,17 @@ using UnityEngine.TestTools;
 using Unity.Entities;
 using System.Linq;
 
+
 namespace Tests
 {
     public class DefaultWorldOnlyTest
     {
+
+        [Test]
+        public void Initialize_Should_Not_Throw_Exception()
+        {
+            Assert.IsNull(CustomWorldBootstrap.InitializeException);
+        }
         [Test]
         public void DefaultWorldShouldExist()
         {
