@@ -39,3 +39,4 @@ sysinfo.txt
 *.csproj
 *.sln
 Assets/Scripts/**/*.meta
+Assets/EntityCache.meta
