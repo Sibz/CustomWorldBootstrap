@@ -1,6 +1,6 @@
 ﻿public class MyBootstrap : CustomWorldBootstrap
 {
-   public MyBootstrap ()
+    public MyBootstrap()
     {
         WorldOptions.Add(new WorldOption("Test World 1"));
     }
