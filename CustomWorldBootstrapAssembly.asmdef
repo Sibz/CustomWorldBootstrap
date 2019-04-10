@@ -1,17 +1,11 @@
 {
-    "name": "PlayModeTests",
+    "name": "CustomWorldBootstrapAssembly",
     "references": [
         "GUID:734d92eba21c94caba915361bd5ac177",
-        "GUID:81cc9c589ebe831448952b87ed55faa8"
+        "GUID:8819f35a0fc84499b990e90a4ca1911f"
     ],
-    "optionalUnityReferences": [
-        "TestAssemblies"
-    ],
-    "includePlatforms": [
-        "Editor",
-        "WindowsStandalone32",
-        "WindowsStandalone64"
-    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
