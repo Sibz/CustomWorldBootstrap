@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Tests
 {
-    public class DefaultWorldOnlyTest
+    public class DefaultWorldOnlyTest : MyECSTestFixtureBase
     {
 
         [Test]
@@ -17,6 +17,14 @@ namespace Tests
         {
             Assert.IsNull(CustomWorldBootstrap.InitializeException);
         }
+
+        [Test]
+        public void Should_Be_Able_To_Create_Entity()
+        {
+            var ent = m_Manager.CreateEntity();
+            Assert.IsTrue(m_Manager.Exists(ent));
+        }
+
         [Test]
         public void DefaultWorldShouldExist()
         {
