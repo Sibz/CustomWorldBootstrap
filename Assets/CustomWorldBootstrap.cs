@@ -1,5 +1,5 @@
 ﻿/*
- * v1.0.15
+ * v1.0.16
  * */
 
 using System;
@@ -17,17 +17,21 @@ public class Initialiser
     public bool CreateDefaultWorld = true;
     private ICustomWorldBootstrap m_CustomWorldBootstrap;
 
-    public Initialiser(ICustomWorldBootstrap customWorldBootstrap, bool CreateDefaultWorld = true, List<WorldOption> worldOptions = null)
+    public Initialiser(ICustomWorldBootstrap customWorldBootstrap, bool createDefaultWorld = true, List<WorldOption> worldOptions = null)
     {
         WorldOptions = worldOptions ?? new List<WorldOption>();
         CustomWorlds = new Dictionary<string, World>();
         m_CustomWorldBootstrap = customWorldBootstrap;
+        CreateDefaultWorld = createDefaultWorld;
     }
 
     public List<Type> Initialise(List<Type> systems)
     {
-
-        CustomWorlds.Add(World.Active.Name, World.Active);
+        // Add the default world, if it exists
+        if (World.Active != null)
+        {
+            CustomWorlds.Add(World.Active.Name, World.Active);
+        }
 
         SystemInfo info = new SystemInfo(CustomWorlds, systems, WorldOptions, CreateDefaultWorld);
 
@@ -162,7 +166,7 @@ public class SystemInfo
                         updateInGroupType == typeof(SimulationSystemGroup) ||
                         updateInGroupType == typeof(PresentationSystemGroup))
                     {
-                        (World.Active.GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetExistingSystem(createdSystemType));
+                        (CustomWorlds[worldOptions.Name].GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetExistingSystem(createdSystemType));
                     }
                     else
                     {
@@ -177,13 +181,13 @@ public class SystemInfo
                         else
                         {
                             Debug.LogWarning(string.Format("Tried to create system {0} in {1} that doesn't exist. Updating in simulation group", createdSystemType.Name, updateInGroupType.Name));
-                            World.Active.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetOrCreateSystem(createdSystemType));
+                            CustomWorlds[worldOptions.Name].GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetOrCreateSystem(createdSystemType));
                         }
                     }
                 }
                 else
                 {
-                    World.Active.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetExistingSystem(createdSystemType));
+                    CustomWorlds[worldOptions.Name].GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetExistingSystem(createdSystemType));
                 }
             }
         }
