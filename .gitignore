@@ -41,3 +41,6 @@ sysinfo.txt
 **/Assets/Scripts/**/*.meta
 **/Assets/EntityCache.meta
 **/Assets/EntityCache/Resources.meta
+
+Assets/Tests/**/*.meta
+
