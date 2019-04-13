@@ -60,26 +60,26 @@ namespace Tests
         protected virtual void OneTimeTearDown()
         {
             m_FakeCWB = null;
-            for (int i = World.AllWorlds.Count - 1; i >= 0; i--)
-            {
-                var item = World.AllWorlds[i];
-                if (!m_InitialWorlds.Contains(item))
-                {
-                    while (item.Systems.Any(x => !m_InitialSystems.Contains(x.GetType())))
-                    {
-                        var system = item.Systems.Where(x => !m_InitialSystems.Contains(x.GetType())).First();
-                        item.DestroySystem(system);
-                    }
+            //for (int i = World.AllWorlds.Count - 1; i >= 0; i--)
+            //{
+            //    var item = World.AllWorlds[i];
+            //    if (!m_InitialWorlds.Contains(item))
+            //    {
+            //        while (item.Systems.Any(x => !m_InitialSystems.Contains(x.GetType())))
+            //        {
+            //            var system = item.Systems.Where(x => !m_InitialSystems.Contains(x.GetType())).First();
+            //            item.DestroySystem(system);
+            //        }
 
-                    //new EntityManager.EntityManagerDebug(item.EntityManager).CheckInternalConsistency();
-                    //if (item.IsCreated)
-                    //{
-                    //    item.Dispose();
-                    //    item.
-                    //}
-                    //item = null;
-                }
-            }
+            //        //new EntityManager.EntityManagerDebug(item.EntityManager).CheckInternalConsistency();
+            //        //if (item.IsCreated)
+            //        //{
+            //        //    item.Dispose();
+            //        //    item.
+            //        //}
+            //        //item = null;
+            //    }
+            //}
         }
 
         protected string GetListHash(List<Type> systems)
