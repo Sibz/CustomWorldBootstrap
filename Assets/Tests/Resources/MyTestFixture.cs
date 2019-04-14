@@ -77,7 +77,7 @@ namespace Tests
 
         protected bool SystemExistsInWorld(string worldName, Type sytemType)
         {
-            return GetWorld(worldName).Systems.Any(x => x.GetType() == typeof(Test4_System));
+            return GetWorld(worldName).Systems.Any(x => x.GetType() == sytemType);
         }
 
         protected string GetListHash(List<Type> systems)
