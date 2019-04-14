@@ -31,9 +31,15 @@ namespace Tests
         }
 
         [Test]
-        public void Systems_Are_In_Custom_World()
+        public void Group_Is_In_Custom_World()
         {
             Assert.IsTrue(SystemExistsInWorld(WORLDNAME, typeof(Test4_Group)));
+        }
+
+
+        [Test]
+        public void System_Is_In_Custom_World()
+        {
             Assert.IsTrue(SystemExistsInWorld(WORLDNAME, typeof(Test4_System)));
         }
 
