@@ -11,6 +11,63 @@ using Unity.Entities;
 using UnityEngine;
 using CustomWorldBoostrapInternal;
 
+
+
+public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBootstrap
+{
+    /// <summary>
+    /// Per world options
+    /// </summary>
+    public List<WorldOption> WorldOptions { get; set; }
+    /// <summary>
+    /// Set false to disable the default world creation
+    /// </summary>
+    public bool CreateDefaultWorld = true;
+
+    /// <summary>
+    /// Accessor for the default world, null if CreateDefaultWorld = false
+    /// </summary>
+    public static World DefaultWorld;
+
+    /// <summary>
+    /// Dictionary containing each world by world name
+    /// </summary>
+    public IReadOnlyDictionary<string, World> Worlds => Initialiser.CustomWorlds;
+
+
+    private Initialiser m_Initialiser;
+    private Initialiser Initialiser
+    {
+        get
+        {
+            if (m_Initialiser == null)
+            {
+                m_Initialiser = new Initialiser(this, CreateDefaultWorld, WorldOptions);
+            }
+            return m_Initialiser;
+        }
+    }
+
+    /// <summary>
+    /// Override this function to customise the list of systems to be creating in the default world
+    /// </summary>
+    /// <param name="systems">List of system that would be created in default world</param>
+    /// <returns>Modified list of systems</returns>
+    public virtual List<Type> PostInitialize(List<Type> systems)
+    {
+        return systems;
+    }
+
+    public List<Type> Initialize(List<Type> systems)
+    {
+        DefaultWorld = World.Active;
+
+        return Initialiser.Initialise(systems);
+    }
+
+}
+
+
 namespace CustomWorldBoostrapInternal
 {
     public class Initialiser
@@ -19,6 +76,7 @@ namespace CustomWorldBoostrapInternal
         public Dictionary<string, World> CustomWorlds { get; }
         public bool CreateDefaultWorld = true;
         private ICustomWorldBootstrap m_CustomWorldBootstrap;
+        public Dictionary<string, List<Type>> WorldSystems = new Dictionary<string, List<Type>>();
 
         public Initialiser(ICustomWorldBootstrap customWorldBootstrap, bool createDefaultWorld = true, List<WorldOption> worldOptions = null)
         {
@@ -36,49 +94,7 @@ namespace CustomWorldBoostrapInternal
                 CustomWorlds.Add(World.Active.Name, World.Active);
             }
 
-            SystemInfo info = new SystemInfo(CustomWorlds, systems, WorldOptions, CreateDefaultWorld);
-
-            PerWorldPostInitialization();
-
-            return m_CustomWorldBootstrap.PostInitialize(info.DefaultWorldSystems);
-        }
-
-        public void PerWorldPostInitialization()
-        {
-            foreach (World w in CustomWorlds.Values)
-            {
-                ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
-                if (WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
-                {
-                    WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
-                }
-            }
-        }
-    }
-
-    public interface ICustomWorldBootstrap
-    {
-        List<Type> PostInitialize(List<Type> systems);
-    }
-
-    public class SystemInfo
-    {
-        public List<Type> SystemTypes;
-        public List<Type> DefaultWorldSystems = null;
-        public Dictionary<string, List<Type>> WorldSystems = new Dictionary<string, List<Type>>();
-        public List<WorldOption> CustomWorldOptions;
-        public Dictionary<string, World> CustomWorlds = new Dictionary<string, World>();
-        private bool m_CreateDefaultWorld = true;
-
-        public SystemInfo(Dictionary<string, World> customWorlds, List<Type> systemTypes, List<WorldOption> customWorldOptions, bool createDefaultWorld)
-        {
-            SystemTypes = systemTypes;
-            CustomWorlds = customWorlds;
-            m_CreateDefaultWorld = createDefaultWorld;
-
-            CustomWorldOptions = customWorldOptions ?? new List<WorldOption>();
-
-            var customWorldNames = SystemTypes
+            var customWorldNames = systems
                 .Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)))
                 .Select(x => x.CustomAttributes
                     .Where(n => n.AttributeType.Name == nameof(CreateInWorldAttribute))
@@ -87,20 +103,22 @@ namespace CustomWorldBoostrapInternal
 
             foreach (var worldname in customWorldNames)
             {
-                if (!CustomWorldOptions.Any(x => x.Name == worldname))
+                if (!WorldOptions.Any(x => x.Name == worldname))
                 {
-                    CustomWorldOptions.Add(new WorldOption(worldname));
+                    WorldOptions.Add(new WorldOption(worldname));
                 }
             }
 
-            if (!CustomWorldOptions.Any(x => x.Name == "Default World"))
+            if (!WorldOptions.Any(x => x.Name == "Default World"))
             {
-                CustomWorldOptions.Add(WorldOption.DefaultWorld());
+                WorldOptions.Add(WorldOption.DefaultWorld());
             }
 
-            var defaultSystemTypes = SystemTypes.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
+            var defaultSystemTypes = systems.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
 
-            foreach (var worldOptions in CustomWorldOptions)
+            List<Type> returnDefaultSystemTypes = null;
+
+            foreach (var worldOptions in WorldOptions)
             {
                 if (!CustomWorlds.ContainsKey(worldOptions.Name))
                 {
@@ -109,14 +127,14 @@ namespace CustomWorldBoostrapInternal
                 }
                 if (worldOptions.Name == "Default World")
                 {
-                    if (m_CreateDefaultWorld)
+                    if (CreateDefaultWorld)
                     {
-                        DefaultWorldSystems = defaultSystemTypes.ToList();
+                        returnDefaultSystemTypes = defaultSystemTypes.ToList();
                     }
                     continue;
                 }
 
-                var worldSystemTypes = GetSystemTypesIncludingUpdateInGroupAncestors(worldOptions.Name);
+                var worldSystemTypes = GetSystemTypesIncludingUpdateInGroupAncestors(worldOptions.Name, systems);
 
                 foreach (var worldSystemType in worldSystemTypes)
                 {
@@ -157,21 +175,37 @@ namespace CustomWorldBoostrapInternal
                     }
                 }
             }
+
+            PerWorldPostInitialization();
+
+            return m_CustomWorldBootstrap.PostInitialize(returnDefaultSystemTypes);
         }
 
-        private IEnumerable<Type> GetSystemTypesIncludingUpdateInGroupAncestors(string worldName)
+        public void PerWorldPostInitialization()
         {
-            var worldSystemTypes = SystemTypes.Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute) && n.ConstructorArguments[0].ToString().Trim('"') == worldName)).ToList();
+            foreach (World w in CustomWorlds.Values)
+            {
+                ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
+                if (WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
+                {
+                    WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
+                }
+            }
+        }
+
+        private IEnumerable<Type> GetSystemTypesIncludingUpdateInGroupAncestors(string worldName, List<Type> systems)
+        {
+            var worldSystemTypes = systems.Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute) && n.ConstructorArguments[0].ToString().Trim('"') == worldName)).ToList();
             List<Type> results = new List<Type>();
             foreach (var type in worldSystemTypes)
             {
-                GetAncestorTypes(results, type, worldName);
+                GetAncestorTypes(results, type, worldName, systems);
             }
             worldSystemTypes.AddRange(results);
             return worldSystemTypes.Distinct().ToList(); ;
         }
 
-        private void GetAncestorTypes(List<Type> listOfTypes, Type type, string worldName)
+        private void GetAncestorTypes(List<Type> listOfTypes, Type type, string worldName, List<Type> systems)
         {
             if (type.CustomAttributes.Any(x => x.AttributeType.Name == nameof(UpdateInGroupAttribute)))
             {
@@ -188,10 +222,10 @@ namespace CustomWorldBoostrapInternal
                     {
                         throw new Exception(string.Format("System {0} is trying to update in a non ComponentSystemGroup class", type.Name));
                     }
-                    else if (SystemTypes.Contains(updateInGroupType))
+                    else if (systems.Contains(updateInGroupType))
                     {
                         listOfTypes.Add(updateInGroupType);
-                        GetAncestorTypes(listOfTypes, updateInGroupType, worldName);
+                        GetAncestorTypes(listOfTypes, updateInGroupType, worldName, systems);
                     }
                 }
             }
@@ -232,6 +266,11 @@ namespace CustomWorldBoostrapInternal
         }
     }
 
+    public interface ICustomWorldBootstrap
+    {
+        List<Type> PostInitialize(List<Type> systems);
+    }
+
     public class WorldOption
     {
         public string Name;
@@ -251,46 +290,4 @@ namespace CustomWorldBoostrapInternal
             return new WorldOption("Default World");
         }
     }
-}
-
-public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBootstrap
-{
-    private Initialiser m_Initialiser;
-    private Initialiser Initialiser
-    {
-        get
-        {
-            if (m_Initialiser == null)
-            {
-                m_Initialiser = new Initialiser(this, CreateDefaultWorld, WorldOptions);
-            }
-            return m_Initialiser;
-        }
-    }
-
-
-    public List<WorldOption> WorldOptions { get; set; }
-
-    //private Dictionary<string, World> m_CustomWorlds => m_Initialiser.CustomWorlds;
-    public IReadOnlyDictionary<string, World> Worlds => Initialiser.CustomWorlds;
-    public bool CreateDefaultWorld = true;
-
-    public static World DefaultWorld;
-
-
-    public static Exception InitializeException;
-
-
-    public virtual List<Type> PostInitialize(List<Type> systems)
-    {
-        return systems;
-    }
-
-    public List<Type> Initialize(List<Type> systems)
-    {
-        DefaultWorld = World.Active;
-
-        return Initialiser.Initialise(systems);
-    }
-
 }
