@@ -2,6 +2,7 @@
  * v1.0.16
  * */
 
+using CustomWorldBoostrapInternal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Unity.Entities;
 using UnityEngine;
-using CustomWorldBoostrapInternal;
 
 
 
@@ -33,7 +33,6 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
     /// Dictionary containing each world by world name
     /// </summary>
     public IReadOnlyDictionary<string, World> Worlds => Initialiser.CustomWorlds;
-
 
     private Initialiser m_Initialiser;
     private Initialiser Initialiser
@@ -72,27 +71,63 @@ namespace CustomWorldBoostrapInternal
 {
     public class Initialiser
     {
-        public List<WorldOption> WorldOptions { get; }
         public Dictionary<string, World> CustomWorlds { get; }
-        public bool CreateDefaultWorld = true;
+
         private ICustomWorldBootstrap m_CustomWorldBootstrap;
-        public Dictionary<string, List<Type>> WorldSystems = new Dictionary<string, List<Type>>();
+        private readonly bool m_CreateDefaultWorld = true;
+        private Dictionary<string, WorldInfo> WorldData { get; }
+        private const string DEFAULTWORLDNAME = "Default World";
+
+        private class WorldInfo
+        {
+            public World World;
+            public List<Type> WorldSystems = new List<Type>();
+            public WorldOption Options;
+        }
 
         public Initialiser(ICustomWorldBootstrap customWorldBootstrap, bool createDefaultWorld = true, List<WorldOption> worldOptions = null)
         {
-            WorldOptions = worldOptions ?? new List<WorldOption>();
+
+            WorldData = new Dictionary<string, WorldInfo>();
+            if (worldOptions != null)
+            {
+                foreach (var wo in worldOptions)
+                {
+                    WorldData.Add(wo.Name, new WorldInfo() { Options = wo });
+                }
+            }
             CustomWorlds = new Dictionary<string, World>();
             m_CustomWorldBootstrap = customWorldBootstrap;
-            CreateDefaultWorld = createDefaultWorld;
+            m_CreateDefaultWorld = createDefaultWorld;
         }
 
         public List<Type> Initialise(List<Type> systems)
         {
-            // Add the default world, if it exists
+            AddDefaultWorldToCustomWorldsAndWorldOptions();
+
+            PopulateWorldOptions(systems);
+
+            var defaultWorldSystems = InitialiseEachWorld(systems);
+
+            PerWorldPostInitialization();
+
+            return m_CustomWorldBootstrap.PostInitialize(defaultWorldSystems);
+        }
+
+        private void AddDefaultWorldToCustomWorldsAndWorldOptions()
+        {
+            // Only the default world if it exists
             if (World.Active != null)
             {
-                CustomWorlds.Add(World.Active.Name, World.Active);
+                if (!WorldData.Keys.Contains(DEFAULTWORLDNAME))
+                {
+                    WorldData.Add(DEFAULTWORLDNAME, new WorldInfo() { Options = WorldOption.DefaultWorld() });
+                }
             }
+        }
+
+        private void PopulateWorldOptions(List<Type> systems)
+        {
 
             var customWorldNames = systems
                 .Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)))
@@ -103,92 +138,104 @@ namespace CustomWorldBoostrapInternal
 
             foreach (var worldname in customWorldNames)
             {
-                if (!WorldOptions.Any(x => x.Name == worldname))
+                if (!WorldData.Keys.Contains(worldname))
                 {
-                    WorldOptions.Add(new WorldOption(worldname));
+                    WorldData.Add(worldname, new WorldInfo() { Options = new WorldOption(worldname) });
                 }
             }
+        }
 
-            if (!WorldOptions.Any(x => x.Name == "Default World"))
-            {
-                WorldOptions.Add(WorldOption.DefaultWorld());
-            }
-
+        private List<Type> InitialiseEachWorld(List<Type> systems)
+        {
             var defaultSystemTypes = systems.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
 
             List<Type> returnDefaultSystemTypes = null;
 
-            foreach (var worldOptions in WorldOptions)
+            foreach (var data in WorldData.Values)
             {
-                if (!CustomWorlds.ContainsKey(worldOptions.Name))
+
+                /*
+                 * Create the world
+                 */
+                if (data.Options.Name == DEFAULTWORLDNAME)
                 {
-                    CustomWorlds.Add(worldOptions.Name, new World(worldOptions.Name));
-                    WorldSystems.Add(worldOptions.Name, new List<Type>());
-                }
-                if (worldOptions.Name == "Default World")
-                {
-                    if (CreateDefaultWorld)
+                    data.World = World.Active;
+                    if (m_CreateDefaultWorld)
                     {
                         returnDefaultSystemTypes = defaultSystemTypes.ToList();
                     }
+                    CustomWorlds.Add(data.Options.Name, data.World);
                     continue;
                 }
-
-                var worldSystemTypes = GetSystemTypesIncludingUpdateInGroupAncestors(worldOptions.Name, systems);
-
-                foreach (var worldSystemType in worldSystemTypes)
+                else
                 {
-                    CreateSystemInWorld(worldOptions.Name, worldSystemType);
+                    data.World = new World(data.Options.Name);
+                    CustomWorlds.Add(data.Options.Name, data.World);
                 }
 
-                foreach (var createdSystemType in WorldSystems[worldOptions.Name])
+                /*
+                 * Create systems in the world
+                 */
+                data.WorldSystems = GetSystemTypesIncludingUpdateInGroupAncestors(data.Options.Name, systems).ToList();
+                foreach (var worldSystemType in data.WorldSystems)
                 {
-                    if (createdSystemType.CustomAttributes.Any(x => x.AttributeType.Name == nameof(UpdateInGroupAttribute)))
+                    data.World.CreateSystem(worldSystemType);
+                }
+
+                /*
+                 * Build the UpdateInGroup Hierarchy
+                 */
+                BuildHierarchy(data);
+            }
+            return returnDefaultSystemTypes;
+        }
+
+        /// <summary>
+        /// Iterate the groups and if they have a UpdateInGroup attribute
+        ///  add them to that groups updatelist
+        ///  otherwise add them to default updatelist
+        /// </summary>
+        /// <param name="data"></param>
+        private void BuildHierarchy(WorldInfo data)
+        {
+            foreach (var createdSystemType in data.WorldSystems)
+            {
+                if (createdSystemType.CustomAttributes.Any(x => x.AttributeType.Name == nameof(UpdateInGroupAttribute)))
+                {
+                    var updateInGroupType = GetCustomAttributeFirstArg<Type>(createdSystemType, nameof(UpdateInGroupAttribute));
+
+                    if (!IsComponentSystemGroup(updateInGroupType))
                     {
-                        var updateInGroupType = GetCustomAttributeFirstArg<Type>(createdSystemType, nameof(UpdateInGroupAttribute));
-                        if (updateInGroupType == typeof(InitializationSystemGroup) ||
-                            updateInGroupType == typeof(SimulationSystemGroup) ||
-                            updateInGroupType == typeof(PresentationSystemGroup))
-                        {
-                            (CustomWorlds[worldOptions.Name].GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetExistingSystem(createdSystemType));
-                        }
-                        else
-                        {
-                            if (!IsComponentSystemGroup(updateInGroupType))
-                            {
-                                throw new Exception(string.Format("System {0} is trying to update in a non ComponentSystemGroup class", createdSystemType.Name));
-                            }
-                            if (WorldSystems[worldOptions.Name].Contains(updateInGroupType))
-                            {
-                                (CustomWorlds[worldOptions.Name].GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetOrCreateSystem(createdSystemType));
-                            }
-                            else
-                            {
-                                Debug.LogWarning(string.Format("Tried to create system {0} in {1} that doesn't exist. Updating in simulation group", createdSystemType.Name, updateInGroupType.Name));
-                                CustomWorlds[worldOptions.Name].GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetOrCreateSystem(createdSystemType));
-                            }
-                        }
+                        throw new Exception(string.Format("System {0} is trying to update in a non ComponentSystemGroup class", createdSystemType.Name));
+                    }
+                    if (data.WorldSystems.Contains(updateInGroupType)
+                        || updateInGroupType == typeof(InitializationSystemGroup)
+                        || updateInGroupType == typeof(SimulationSystemGroup)
+                        || updateInGroupType == typeof(PresentationSystemGroup))
+                    {
+                        (data.World.GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
                     }
                     else
                     {
-                        CustomWorlds[worldOptions.Name].GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(CustomWorlds[worldOptions.Name].GetExistingSystem(createdSystemType));
+                        Debug.LogWarning(string.Format("Tried to create system {0} in {1} that doesn't exist. Updating in simulation group", createdSystemType.Name, updateInGroupType.Name));
+                        data.World.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
                     }
                 }
+                else
+                {
+                    data.World.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(data.World.GetExistingSystem(createdSystemType));
+                }
             }
-
-            PerWorldPostInitialization();
-
-            return m_CustomWorldBootstrap.PostInitialize(returnDefaultSystemTypes);
         }
 
-        public void PerWorldPostInitialization()
+        private void PerWorldPostInitialization()
         {
-            foreach (World w in CustomWorlds.Values)
+            foreach (World w in WorldData.Select(x => x.Value.World))
             {
                 ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
-                if (WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
+                if (WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
                 {
-                    WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
+                    WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
                 }
             }
         }
@@ -230,11 +277,7 @@ namespace CustomWorldBoostrapInternal
                 }
             }
         }
-        private void CreateSystemInWorld(string name, Type systemType)
-        {
-            CustomWorlds[name].CreateSystem(systemType);
-            WorldSystems[name].Add(systemType);
-        }
+
         private T GetCustomAttributeFirstArg<T>(Type type, string name)
         {
             var firstAttributeByName = type.CustomAttributes
