@@ -1,13 +1,5 @@
 ﻿using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using Unity.Entities;
-using UnityEngine;
-using UnityEngine.TestTools;
 using CustomWorldBoostrapInternal;
-
 
 namespace Tests
 {

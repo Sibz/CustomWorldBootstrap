@@ -1,12 +1,8 @@
 ﻿using NUnit.Framework;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Entities;
-using UnityEngine;
-using UnityEngine.TestTools;
-
 
 namespace Tests
 {
@@ -38,7 +34,7 @@ namespace Tests
             //    m_InitialWorlds.Add(w);
             //}
 
-            // Set up our default list of systems to test with
+            // Set up our default list of systems to test with.
             // Inherited classes can add to this list
             m_DefaultSystems = new List<Type>();
             m_DefaultSystems.AddRange(DefaultSystems);
