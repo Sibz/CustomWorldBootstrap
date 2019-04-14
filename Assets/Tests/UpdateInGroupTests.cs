@@ -24,12 +24,6 @@ namespace Tests
             var newSystems = new Initialiser(m_FakeCWB).Initialise(m_DefaultSystems);
         }
 
-        [TearDown]
-        protected override void TearDown()
-        {
-
-        }
-
         [Test]
         public void Creates_Custom_World()
         {
