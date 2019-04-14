@@ -33,21 +33,21 @@ namespace Tests
         [Test]
         public void Creates_Custom_World()
         {
-            Assert.IsTrue(World.AllWorlds.Any(x => x.Name.Equals(WORLDNAME)));
+            Assert.IsTrue(WorldExists(WORLDNAME));
         }
 
         [Test]
         public void Systems_Are_In_Custom_World()
         {
-            Assert.IsTrue(World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First().Systems.Any(x => x.GetType() == typeof(Test3_InitializationSystem)));
-            Assert.IsTrue(World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First().Systems.Any(x => x.GetType() == typeof(Test3_SimulationSystem)));
-            Assert.IsTrue(World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First().Systems.Any(x => x.GetType() == typeof(Test3_PresentationSystem)));
+            Assert.IsTrue(SystemExistsInWorld(WORLDNAME, typeof(Test3_InitializationSystem)));
+            Assert.IsTrue(SystemExistsInWorld(WORLDNAME, typeof(Test3_SimulationSystem)));
+            Assert.IsTrue(SystemExistsInWorld(WORLDNAME, typeof(Test3_PresentationSystem)));
         }
 
         [Test]
         public void Systems_Updates_In_UpdateGroup()
         {
-            var world = World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First();
+            var world = GetWorld(WORLDNAME);
             world.GetExistingSystem<InitializationSystemGroup>().Update();
             Assert.IsTrue(world.GetExistingSystem<Test3_InitializationSystem>().Updated);
             Assert.IsFalse(world.GetExistingSystem<Test3_SimulationSystem>().Updated);

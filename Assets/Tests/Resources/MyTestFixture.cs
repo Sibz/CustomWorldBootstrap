@@ -14,33 +14,36 @@ namespace Tests
     public abstract class MyTestFixture
     {
         public static List<Type> DefaultSystems;
-        protected static bool hasIntialised = false;
+        private static bool m_HasInitialised = false;
         protected List<Type> m_DefaultSystems;
         protected FakeCustomWorldBootstrap m_FakeCWB;
-        protected int m_IntitialNumberOfWorlds = 0;
-        protected List<World> m_InitialWorlds = new List<World>();
-        protected List<Type> m_InitialSystems = new List<Type>();
+        //protected List<World> m_InitialWorlds = new List<World>();
 
         [OneTimeSetUp]
         protected virtual void OneTimeSetup()
         {
-            if (!hasIntialised)
+            // We need to intitialise the default world to get a list
+            // of default systems, DefaultSystems is set in TestBootStrap
+            if (!m_HasInitialised)
             {
                 DefaultWorldInitialization.Initialize("Default World", false);
-                hasIntialised = true;
+                m_HasInitialised = true;
             }
-            foreach (var s in World.Active.Systems)
-            {
-                m_InitialSystems.Add(s.GetType());
-            }
-            foreach (var w in World.AllWorlds)
-            {
-                m_InitialWorlds.Add(w);
-            }
-            m_IntitialNumberOfWorlds = World.AllWorlds.Count;
+
+            // This is so we can preserve the initial worlds
+            // This is redundant in Entities.30 as we can't remove
+            // worlds or systems without breaking stuff
+            //foreach (var w in World.AllWorlds)
+            //{
+            //    m_InitialWorlds.Add(w);
+            //}
+
+            // Set up our default list of systems to test with
+            // Inherited classes can add to this list
             m_DefaultSystems = new List<Type>();
             m_DefaultSystems.AddRange(DefaultSystems);
 
+            // Just to fake the PostInitialize function;
             m_FakeCWB = new FakeCustomWorldBootstrap();
         }
 
@@ -59,27 +62,22 @@ namespace Tests
         [OneTimeTearDown]
         protected virtual void OneTimeTearDown()
         {
-            m_FakeCWB = null;
-            //for (int i = World.AllWorlds.Count - 1; i >= 0; i--)
-            //{
-            //    var item = World.AllWorlds[i];
-            //    if (!m_InitialWorlds.Contains(item))
-            //    {
-            //        while (item.Systems.Any(x => !m_InitialSystems.Contains(x.GetType())))
-            //        {
-            //            var system = item.Systems.Where(x => !m_InitialSystems.Contains(x.GetType())).First();
-            //            item.DestroySystem(system);
-            //        }
 
-            //        //new EntityManager.EntityManagerDebug(item.EntityManager).CheckInternalConsistency();
-            //        //if (item.IsCreated)
-            //        //{
-            //        //    item.Dispose();
-            //        //    item.
-            //        //}
-            //        //item = null;
-            //    }
-            //}
+        }
+
+        protected bool WorldExists(string worldName)
+        {
+            return World.AllWorlds.Any(x => x.Name.Equals(worldName));
+        }
+
+        protected World GetWorld(string worldName)
+        {
+            return World.AllWorlds.Where(x => x.Name.Equals(worldName)).First();
+        }
+
+        protected bool SystemExistsInWorld(string worldName, Type sytemType)
+        {
+            return GetWorld(worldName).Systems.Any(x => x.GetType() == typeof(Test4_System));
         }
 
         protected string GetListHash(List<Type> systems)

@@ -33,20 +33,20 @@ namespace Tests
         [Test]
         public void Creates_Custom_World()
         {
-            Assert.IsTrue(World.AllWorlds.Any(x => x.Name.Equals(WORLDNAME)));
+            Assert.IsTrue(WorldExists(WORLDNAME));
         }
 
         [Test]
         public void Systems_Are_In_Custom_World()
         {
-            Assert.IsTrue(World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First().Systems.Any(x => x.GetType() == typeof(Test4_Group)));
-            Assert.IsTrue(World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First().Systems.Any(x => x.GetType() == typeof(Test4_System)));
+            Assert.IsTrue(SystemExistsInWorld(WORLDNAME, typeof(Test4_Group)));
+            Assert.IsTrue(SystemExistsInWorld(WORLDNAME, typeof(Test4_System)));
         }
 
         [Test]
         public void Systems_Updates_In_UpdateGroup()
         {
-            var world = World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First();
+            var world = GetWorld(WORLDNAME);
 
             world.GetExistingSystem<SimulationSystemGroup>().Update();
             Assert.IsTrue(world.GetExistingSystem<Test4_System>().Updated);

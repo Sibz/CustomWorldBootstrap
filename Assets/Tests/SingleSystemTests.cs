@@ -31,21 +31,21 @@ namespace Tests
         [Test]
         public void Creates_Custom_World()
         {
-            Assert.Greater(World.AllWorlds.Count, m_IntitialNumberOfWorlds);
-            Assert.IsTrue(World.AllWorlds.Any(x => x.Name.Equals(WORLDNAME)));
+
+            Assert.IsTrue(WorldExists(WORLDNAME));
 
         }
 
         [Test]
         public void System_Is_In_Custom_World()
         {
-            Assert.IsTrue(World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First().Systems.Any(x => x.GetType() == typeof(Test2)));
+            Assert.IsTrue(SystemExistsInWorld(WORLDNAME, typeof(Test2)));
         }
 
         [Test]
         public void System_Updates_In_Default_UpdateGroup()
         {
-            var world = World.AllWorlds.Where(x => x.Name.Equals(WORLDNAME)).First();
+            var world =GetWorld(WORLDNAME);
             world.GetExistingSystem<SimulationSystemGroup>().Update();
             Assert.IsTrue(world.GetExistingSystem<Test2>().Updated);
         }
