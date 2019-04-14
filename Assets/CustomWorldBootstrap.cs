@@ -67,7 +67,7 @@ namespace CustomWorldBoostrapInternal
 {
     public class Initialiser
     {
-        public Dictionary<string, World> CustomWorlds { get; }
+        internal Dictionary<string, World> CustomWorlds { get; }
 
         private ICustomWorldBootstrap m_CustomWorldBootstrap;
         private readonly bool m_CreateDefaultWorld = true;
