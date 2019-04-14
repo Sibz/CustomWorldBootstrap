@@ -43,4 +43,6 @@ sysinfo.txt
 **/Assets/EntityCache/Resources.meta
 
 Assets/Tests/**/*.meta
+Assets/*cs.meta
+Assets/*asmdef.meta
 
