@@ -1,5 +1,5 @@
 ﻿/*
- * v1.0.16
+ * v1.1.0
  * */
 
 using CustomWorldBoostrapInternal;
