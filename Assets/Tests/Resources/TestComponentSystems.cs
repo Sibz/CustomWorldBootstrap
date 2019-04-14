@@ -6,6 +6,10 @@ using UnityEngine;
 
 namespace Tests
 {
+    /// <summary>
+    /// All systems have [DisableAutoCreation] as we want to control
+    /// what is in the list of system types for testing
+    /// </summary>
     public abstract class UpdateableSystem : ComponentSystem
     {
         public bool Updated = false;
@@ -14,6 +18,7 @@ namespace Tests
             Updated = true;
         }
     }
+
     [DisableAutoCreation]
     public class Test1 : UpdateableSystem
     {
@@ -70,10 +75,7 @@ namespace Tests
     [CreateInWorld("Test5 World")]
     public class Test5_Group1 : ComponentSystemGroup
     {
-        protected override void OnUpdate()
-        {
-            throw new System.NotImplementedException();
-        }
+
     }
 
     [DisableAutoCreation]
@@ -81,51 +83,36 @@ namespace Tests
     [CreateInWorld("Test5 World")]
     public class Test5_Group2 : ComponentSystemGroup
     {
-        protected override void OnUpdate()
-        {
-            throw new System.NotImplementedException();
-        }
+
     }
 
     [DisableAutoCreation]
     [UpdateInGroup(typeof(Test5_Group2))]
     [CreateInWorld("Test5 World")]
-    public class Test5_System : ComponentSystemGroup
+    public class Test5_System : UpdateableSystem
     {
-        protected override void OnUpdate()
-        {
-            throw new System.NotImplementedException();
-        }
+
     }
 
 
     [DisableAutoCreation]
     [CreateInWorld("Test6 World")]
     [UpdateAfter(typeof(Test6_System2))]
-    public class Test6_System1 : ComponentSystemGroup
+    public class Test6_System1 : UpdateableSystem
     {
-        protected override void OnUpdate()
-        {
-            throw new System.NotImplementedException();
-        }
+
     }
     [DisableAutoCreation]
     [CreateInWorld("Test6 World")]
-    public class Test6_System2 : ComponentSystemGroup
+    public class Test6_System2 : UpdateableSystem
     {
-        protected override void OnUpdate()
-        {
-            throw new System.NotImplementedException();
-        }
+
     }
     [DisableAutoCreation]
     [CreateInWorld("Test6 World")]
     [UpdateBefore(typeof(Test6_System2))]
-    public class Test6_System3 : ComponentSystemGroup
+    public class Test6_System3 : UpdateableSystem
     {
-        protected override void OnUpdate()
-        {
-            throw new System.NotImplementedException();
-        }
+
     }
 }
