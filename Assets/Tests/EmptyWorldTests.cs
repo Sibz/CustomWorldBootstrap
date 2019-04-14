@@ -24,14 +24,20 @@ namespace Tests
             {
                 m_InitialSystems.Add(s.GetType());
             }
+
+            new Initialiser(m_FakeCWB, true, new List<WorldOption>() { new WorldOption(WORLDNAME) }).Initialise(DefaultSystems);
         }
 
         [Test]
-        public void World_Gets_Created_And_Is_Empty()
+        public void World_Gets_Created()
         {
-            new Initialiser(m_FakeCWB, true, new List<WorldOption>() { new WorldOption(WORLDNAME) }).Initialise(DefaultSystems);
             Assert.IsTrue(WorldExists(WORLDNAME));
-            Assert.IsEmpty(GetWorld(WORLDNAME).Systems.Where(x=>!m_InitialSystems.Contains(x.GetType())));
+        }
+
+        [Test]
+        public void World_Is_Has_No_NonDefault_Systems()
+        {
+            Assert.IsEmpty(GetWorld(WORLDNAME).Systems.Where(x => !m_InitialSystems.Contains(x.GetType())));
         }
     }
 }
