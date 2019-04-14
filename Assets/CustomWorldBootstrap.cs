@@ -35,7 +35,14 @@ public class Initialiser
 
         SystemInfo info = new SystemInfo(CustomWorlds, systems, WorldOptions, CreateDefaultWorld);
 
-        foreach (World w in info.CustomWorlds.Values)
+        PerWorldPostInitialization();
+
+        return m_CustomWorldBootstrap.PostInitialize(info.DefaultWorldSystems);
+    }
+
+    public void PerWorldPostInitialization()
+    {
+        foreach (World w in CustomWorlds.Values)
         {
             ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
             if (WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
@@ -43,8 +50,6 @@ public class Initialiser
                 WorldOptions.Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
             }
         }
-
-        return m_CustomWorldBootstrap.PostInitialize(info.DefaultWorldSystems);
     }
 }
 
