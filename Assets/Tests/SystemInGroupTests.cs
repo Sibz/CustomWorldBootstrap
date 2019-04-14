@@ -6,6 +6,7 @@ using System.Linq;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.TestTools;
+using CustomWorldBoostrapInternal;
 
 namespace Tests
 {
