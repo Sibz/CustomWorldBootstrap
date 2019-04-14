@@ -6,12 +6,8 @@ using CustomWorldBoostrapInternal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Unity.Entities;
 using UnityEngine;
-
-
 
 public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBootstrap
 {
@@ -71,7 +67,7 @@ namespace CustomWorldBoostrapInternal
 {
     public class Initialiser
     {
-        public Dictionary<string, World> CustomWorlds { get; }
+        internal Dictionary<string, World> CustomWorlds { get; }
 
         private ICustomWorldBootstrap m_CustomWorldBootstrap;
         private readonly bool m_CreateDefaultWorld = true;
@@ -87,7 +83,6 @@ namespace CustomWorldBoostrapInternal
 
         public Initialiser(ICustomWorldBootstrap customWorldBootstrap, bool createDefaultWorld = true, List<WorldOption> worldOptions = null)
         {
-
             WorldData = new Dictionary<string, WorldInfo>();
             if (worldOptions != null)
             {
@@ -128,7 +123,6 @@ namespace CustomWorldBoostrapInternal
 
         private void PopulateWorldOptions(List<Type> systems)
         {
-
             var customWorldNames = systems
                 .Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)))
                 .Select(x => x.CustomAttributes
@@ -153,7 +147,6 @@ namespace CustomWorldBoostrapInternal
 
             foreach (var data in WorldData.Values)
             {
-
                 /*
                  * Create the world
                  */
@@ -244,11 +237,14 @@ namespace CustomWorldBoostrapInternal
         {
             var worldSystemTypes = systems.Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute) && n.ConstructorArguments[0].ToString().Trim('"') == worldName)).ToList();
             List<Type> results = new List<Type>();
+
             foreach (var type in worldSystemTypes)
             {
                 GetAncestorTypes(results, type, worldName, systems);
             }
+
             worldSystemTypes.AddRange(results);
+
             return worldSystemTypes.Distinct().ToList(); ;
         }
 
@@ -293,6 +289,7 @@ namespace CustomWorldBoostrapInternal
             return (T)firstAttributeByName
                 .ConstructorArguments[0].Value;
         }
+
         private bool IsComponentSystemGroup(Type type)
         {
             Type baseType = type;

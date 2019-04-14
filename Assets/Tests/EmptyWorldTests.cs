@@ -1,21 +1,16 @@
 ﻿using NUnit.Framework;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Entities;
-using UnityEngine;
-using UnityEngine.TestTools;
 using CustomWorldBoostrapInternal;
-
 
 namespace Tests
 {
     public class EmptyWorldTests : MyTestFixture
     {
         private const string WORLDNAME = "Test Empty World";
-        protected List<Type> m_InitialSystems = new List<Type>();
-
+        private List<Type> m_InitialSystems = new List<Type>();
 
         protected override void OneTimeSetup()
         {
