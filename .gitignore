@@ -46,3 +46,4 @@ Assets/Tests/**/*.meta
 Assets/*cs.meta
 Assets/*asmdef.meta
 
+ProjectSettings/XRSettings.asset
