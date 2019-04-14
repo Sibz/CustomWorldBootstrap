@@ -22,7 +22,7 @@ namespace Tests
                 m_InitialSystems.Add(s.GetType());
             }
 
-            new Initialiser(m_FakeCWB, true, new List<WorldOption>() { new WorldOption(WORLDNAME) }).Initialise(DefaultSystems);
+            new Initialiser(m_FakeCWB, true, new List<CustomWorldBootstrap.WorldOption>() { new CustomWorldBootstrap.WorldOption(WORLDNAME) }).Initialise(DefaultSystems);
         }
 
         [Test]

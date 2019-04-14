@@ -17,10 +17,10 @@ namespace Tests
         protected override void OneTimeSetup()
         {
             base.OneTimeSetup();
-            new Initialiser(m_FakeCWB, true, new List<WorldOption>()
+            new Initialiser(m_FakeCWB, true, new List<CustomWorldBootstrap.WorldOption>()
             {
-                new WorldOption(WorldAName) { OnInitialize = PostWorldAIntialize },
-                new WorldOption(WorldBName) { OnInitialize = PostWorldBIntialize }
+                new CustomWorldBootstrap.WorldOption(WorldAName) { OnInitialize = PostWorldAIntialize },
+                new CustomWorldBootstrap.WorldOption(WorldBName) { OnInitialize = PostWorldBIntialize }
             }).Initialise(m_DefaultSystems);
         }
 
