@@ -98,7 +98,7 @@ namespace CustomWorldBoostrapInternal
 
         public List<Type> Initialise(List<Type> systems)
         {
-            AddDefaultWorldToCustomWorldsAndWorldOptions();
+            AddDefaultWorldToWorldData();
 
             PopulateWorldOptions(systems);
 
@@ -109,7 +109,7 @@ namespace CustomWorldBoostrapInternal
             return m_CustomWorldBootstrap.PostInitialize(defaultWorldSystems);
         }
 
-        private void AddDefaultWorldToCustomWorldsAndWorldOptions()
+        private void AddDefaultWorldToWorldData()
         {
             // Only the default world if it exists
             if (World.Active != null)
