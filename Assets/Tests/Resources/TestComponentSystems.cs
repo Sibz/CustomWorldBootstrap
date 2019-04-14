@@ -54,21 +54,15 @@ namespace Tests
     [CreateInWorld("Test4 World")]
     public class Test4_Group : ComponentSystemGroup
     {
-        protected override void OnUpdate()
-        {
-            throw new System.NotImplementedException();
-        }
+
     }
 
     [DisableAutoCreation]
     [UpdateInGroup(typeof(Test4_Group))]
     [CreateInWorld("Test4 World")]
-    public class Test4_System : ComponentSystemGroup
+    public class Test4_System : UpdateableSystem
     {
-        protected override void OnUpdate()
-        {
-            throw new System.NotImplementedException();
-        }
+
     }
 
 
