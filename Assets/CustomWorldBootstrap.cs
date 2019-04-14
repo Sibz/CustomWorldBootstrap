@@ -102,16 +102,16 @@ namespace CustomWorldBoostrapInternal
 
             PopulateWorldOptions(systems);
 
-            var defaultWorldSystems = InitialiseEachWorld(systems);
+            InitialiseEachWorld(systems);
 
             PerWorldPostInitialization();
 
-            return m_CustomWorldBootstrap.PostInitialize(defaultWorldSystems);
+            return m_CustomWorldBootstrap.PostInitialize(m_CreateDefaultWorld ? GetDefaultSystemTypes(systems).ToList() : null);
         }
 
         private void AddDefaultWorldToWorldData()
         {
-            // Only the default world if it exists
+            // Only add the default world if it exists
             if (World.Active != null)
             {
                 if (!WorldData.Keys.Contains(DEFAULTWORLDNAME))
@@ -139,11 +139,14 @@ namespace CustomWorldBoostrapInternal
             }
         }
 
-        private List<Type> InitialiseEachWorld(List<Type> systems)
+        private IEnumerable<Type> GetDefaultSystemTypes(List<Type> systems)
         {
-            var defaultSystemTypes = systems.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
+            return systems.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
+        }
 
-            List<Type> returnDefaultSystemTypes = null;
+        private void InitialiseEachWorld(List<Type> systems)
+        {
+            var defaultSystemTypes = GetDefaultSystemTypes(systems);
 
             foreach (var data in WorldData.Values)
             {
@@ -153,10 +156,6 @@ namespace CustomWorldBoostrapInternal
                 if (data.Options.Name == DEFAULTWORLDNAME)
                 {
                     data.World = World.Active;
-                    if (m_CreateDefaultWorld)
-                    {
-                        returnDefaultSystemTypes = defaultSystemTypes.ToList();
-                    }
                     CustomWorlds.Add(data.Options.Name, data.World);
                     continue;
                 }
@@ -180,7 +179,6 @@ namespace CustomWorldBoostrapInternal
                  */
                 BuildHierarchy(data);
             }
-            return returnDefaultSystemTypes;
         }
 
         /// <summary>
