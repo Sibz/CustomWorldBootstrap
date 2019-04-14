@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Tests
 {
@@ -10,7 +10,11 @@ namespace Tests
         public List<Type> PostInitialize(List<Type> systems)
         {
             PostInitializeRan = true;
-            systems.AddRange(Alterations);
+            if (systems != null)
+            {
+                systems.AddRange(Alterations);
+            }
+
             return systems;
         }
     }
