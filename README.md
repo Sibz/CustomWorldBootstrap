@@ -3,6 +3,8 @@
 </a>
 
 # CustomWorldBootstrap
+### v1.1.2 Changes
+* Fixed an issue where WorldOptions was not initialized
 ### v1.1.1 Changes
 * WorldOption is now located in CustomWorldBootstrap class.
 *Previously it was erronously put in global and CustomWorldBootstrapInternal namespaces. If you have referenced it in these namespaces it will now be marked as obsolete*
