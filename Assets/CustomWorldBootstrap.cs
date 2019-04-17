@@ -14,7 +14,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
     /// <summary>
     /// Per world options
     /// </summary>
-    public List<WorldOption> WorldOptions { get; set; }
+    public List<WorldOption> WorldOptions { get; } = new List<WorldOption>();
     /// <summary>
     /// Set false to disable the default world creation
     /// </summary>
