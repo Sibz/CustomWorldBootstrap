@@ -22,7 +22,7 @@ namespace Tests
                 true,
                 new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption>() {
                     new CustomWorldBootstrap.WorldOption(WORLDNAME) {
-                        CustomIncludeFilter = systems=>systems
+                        CustomIncludeQuery = systems=>systems
                         .Where(system=>system.GetInterfaces().Any(iface=>iface.Name== nameof(ITest7))).ToList()
                     }
                 }).Initialise(m_DefaultSystems);

@@ -91,7 +91,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
         /// The systems returned will be created in this world
         ///  and will not be created in default world
         /// </summary>
-        public Func<List<Type>, List<Type>> CustomIncludeFilter;
+        public Func<List<Type>, List<Type>> CustomIncludeQuery;
 
         public WorldOption(string name)
         {
@@ -240,9 +240,9 @@ namespace CustomWorldBoostrapInternal
                  * Create systems in the world
                  */
                 data.WorldSystems = GetSystemTypesIncludingUpdateInGroupAncestors(data.Options.Name, systems).ToList();
-                if(data.Options.CustomIncludeFilter!=null)
+                if(data.Options.CustomIncludeQuery!=null)
                 {
-                    data.WorldSystems.AddRange(data.Options.CustomIncludeFilter(systems));
+                    data.WorldSystems.AddRange(data.Options.CustomIncludeQuery(systems));
                     data.WorldSystems = data.WorldSystems.Distinct().ToList();
                 }
                 foreach (var worldSystemType in data.WorldSystems)
