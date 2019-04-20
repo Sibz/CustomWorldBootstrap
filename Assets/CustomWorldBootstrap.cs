@@ -180,7 +180,6 @@ namespace CustomWorldBoostrapInternal
 
         private void InitialiseEachWorld(List<Type> systems)
         {
-            var defaultSystemTypes = GetDefaultSystemTypes(systems);
 
             foreach (var data in WorldData.Values)
             {
