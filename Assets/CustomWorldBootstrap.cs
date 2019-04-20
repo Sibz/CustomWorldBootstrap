@@ -163,6 +163,8 @@ namespace CustomWorldBoostrapInternal
                 World.Active = CustomWorlds[m_DefaultWorldName];
             }
 
+            UpdateSortOrder();
+
             return m_CustomWorldBootstrap.PostInitialize(!m_CreateDefaultWorld || (m_CreateDefaultWorld && m_DefaultWorldName != "Default World") ? null : GetDefaultSystemTypes(systems).ToList());
         }
 
@@ -226,7 +228,7 @@ namespace CustomWorldBoostrapInternal
                     continue;
                 }
                 else
-                {                    
+                {
                     data.World = new World(data.Options.Name);
                     CustomWorlds.Add(data.Options.Name, data.World);
 
@@ -240,7 +242,7 @@ namespace CustomWorldBoostrapInternal
                  * Create systems in the world
                  */
                 data.WorldSystems = GetSystemTypesIncludingUpdateInGroupAncestors(data.Options.Name, systems).ToList();
-                if(data.Options.CustomIncludeQuery!=null)
+                if (data.Options.CustomIncludeQuery != null)
                 {
                     data.WorldSystems.AddRange(data.Options.CustomIncludeQuery(systems));
                     data.WorldSystems = data.WorldSystems.Distinct().ToList();
@@ -292,7 +294,6 @@ namespace CustomWorldBoostrapInternal
                         updateGroup = data.World.GetOrCreateSystem<SimulationSystemGroup>();
                     }
                     updateGroup.AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
-                    updateGroup.SortSystemUpdateList();
                 }
                 else
                 {
@@ -301,11 +302,31 @@ namespace CustomWorldBoostrapInternal
             }
         }
 
+        private void UpdateSortOrder()
+        {
+            foreach (var data in WorldData.Values)
+            {
+                foreach (var type in data.WorldSystems)
+                {
+                    if (IsComponentSystemGroup(type))
+                    {
+                        ((ComponentSystemGroup)data.World.GetExistingSystem(type)).SortSystemUpdateList();
+                    }
+                }
+            }
+            if (m_CreateDefaultWorld)
+            {
+                foreach (var t in new Type[] { typeof(InitializationSystemGroup), typeof(SimulationSystemGroup), typeof(PresentationSystemGroup) })
+                {
+                    (World.Active.GetExistingSystem(t) as ComponentSystemGroup).SortSystemUpdateList();
+                }
+            }
+        }
+
         private void PerWorldPostInitialization()
         {
             foreach (World w in WorldData.Select(x => x.Value.World))
             {
-                //ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
                 if (WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
                 {
                     WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
