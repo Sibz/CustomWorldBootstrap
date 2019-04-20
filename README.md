@@ -3,8 +3,13 @@
 </a>
 
 # CustomWorldBootstrap
+**v1.2.0 Changes**
+* Added option for including systems based on a custom query
+See **World Options** below for more information
+* Full details in [Pull request #34](pull/34)
+
 **v1.1.3 Changes**
-[See pull request #31](pull/31)
+* Full details in [Pull request #31](pull/31)
 
 **v1.1.2 Changes**
 * Fixed an issue where WorldOptions was not initialized
@@ -53,7 +58,7 @@ MyBootstrap.DefaultWorld
 To run your own code after all worlds are initialized, just override the `PostInitialize` function.
 
 This takes and returns a list of systems that defines what will be in the default world.
-*If the option `CreateDefaultWorld` is set to false, `systems` will be null.*
+*If the option `CreateDefaultWorld` is set to false or `DefaultWorldName` is not 'Default World', `systems` will be null.*
 
 ```csharp
 public class MyBootStrap : CustomWorldBootstrap
@@ -72,8 +77,9 @@ Callback can be defined in options. see below
 ### Options
 The follow properties can be set:
 
-* CreateDefaultWorld - Default true, set false to disable default world creation.
-* WorldOptionList - List of world options. This can be left empty. Worlds will be created with default options upon detection of the use of CreateInWorld Attribute. If you need a world with no systems, it needs to be specified here.
+* **CreateDefaultWorld** - Default true, set false to disable default world creation. In doing so automatic updates will not work. If you need automatic updates, you need a default world that effectively shares the base system groups.
+* **DefaultWorldName** - Default "", set to the name of another world to make it the new default world. The new default world will only have base system groups and buffer systems. The standard "Default World" will not be created. 
+* **WorldOptionList** - List of world options. This can be left empty. Worlds will be created with default options upon detection of the use of CreateInWorld Attribute. If you need a world with no systems, it needs to be specified here.
 
 
 ```csharp
@@ -88,8 +94,9 @@ public class MyBootstrap : CustomWorldBootstrap
 ```
 
 #### World Options
-* OnInitialize - default null, Action<World> callback for post world initialisation.
 
+* **OnInitialize** - default null, Action<World> callback for post world initialisation.
+* **CustomIncludeQuery** - Set to a function that takes `List<Type>` and returns `List<Type>` in order to include systems based on a custom query. The systems returned will be included in the world and not the default world. 
 ```csharp
 public class MyBootstrap : CustomWorldBootstrap
 {
@@ -97,15 +104,27 @@ public class MyBootstrap : CustomWorldBootstrap
     {
         var myWorldOption = new CustomWorldBootstrap.WorldOption("My world with initialise callback")
         {
-            OnInitialize = OnMyWorldInitialise
+            OnInitialize = OnMyWorldInitialise,
+            CustomIncludeQuery = MyCustomQuery
         };
         WorldOptions.Add(myWorldOption);
     }
 
     public void OnMyWorldInitialise(World world)
     {
-        // Do stuff once wiht this world when all systems have been created.
-    } 
+        // Do stuff once with this world when all systems have been created.
+    }
+    
+    public List<Type> MyCustomQuery(List<Type> systems)
+    {
+        // Return only systems you want in the world.
+        // Example below uses linq to filter systems 
+        // that implement IMyInterface
+        return systems
+          .Where(type=>
+            type.GetInterfaces()
+              .Any(iface=>iface.Name==nameof(IMyInterface)));
+    }
 }
 
 ```
