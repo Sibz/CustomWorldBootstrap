@@ -156,7 +156,9 @@ namespace CustomWorldBoostrapInternal
         private void PopulateWorldOptions(List<Type> systems)
         {
             var customWorldNames = systems
-                .Where(x => x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)))
+                .Where(x =>
+                x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)) &&
+                x.CustomAttributes.Where(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)).First().ConstructorArguments.Count > 0)
                 .Select(x => x.CustomAttributes
                     .Where(n => n.AttributeType.Name == nameof(CreateInWorldAttribute))
                     .FirstOrDefault().ConstructorArguments[0].ToString().Trim('"'))
