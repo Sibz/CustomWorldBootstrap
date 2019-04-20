@@ -251,7 +251,7 @@ namespace CustomWorldBoostrapInternal
                 }
                 else
                 {
-                    data.World.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(data.World.GetExistingSystem(createdSystemType));
+                    World.Active.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(data.World.GetExistingSystem(createdSystemType));
                 }
             }
         }
