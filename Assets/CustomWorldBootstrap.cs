@@ -275,21 +275,24 @@ namespace CustomWorldBoostrapInternal
                     {
                         throw new Exception(string.Format("System {0} is trying to update in a non ComponentSystemGroup class", createdSystemType.Name));
                     }
+                    ComponentSystemGroup updateGroup;
                     if (updateInGroupType == typeof(InitializationSystemGroup)
                         || updateInGroupType == typeof(SimulationSystemGroup)
                         || updateInGroupType == typeof(PresentationSystemGroup))
                     {
-                        (World.Active.GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
+                        updateGroup = (ComponentSystemGroup)World.Active.GetOrCreateSystem(updateInGroupType);
                     }
                     else if (data.WorldSystems.Contains(updateInGroupType))
                     {
-                        (data.World.GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
+                        updateGroup = (ComponentSystemGroup)data.World.GetOrCreateSystem(updateInGroupType);
                     }
                     else
                     {
                         Debug.LogWarning(string.Format("Tried to create system {0} in {1} that doesn't exist. Updating in simulation group", createdSystemType.Name, updateInGroupType.Name));
-                        data.World.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
+                        updateGroup = data.World.GetOrCreateSystem<SimulationSystemGroup>();
                     }
+                    updateGroup.AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
+                    updateGroup.SortSystemUpdateList();
                 }
                 else
                 {
