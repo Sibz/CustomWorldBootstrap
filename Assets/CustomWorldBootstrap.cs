@@ -233,10 +233,13 @@ namespace CustomWorldBoostrapInternal
                     {
                         throw new Exception(string.Format("System {0} is trying to update in a non ComponentSystemGroup class", createdSystemType.Name));
                     }
-                    if (data.WorldSystems.Contains(updateInGroupType)
-                        || updateInGroupType == typeof(InitializationSystemGroup)
+                    if (updateInGroupType == typeof(InitializationSystemGroup)
                         || updateInGroupType == typeof(SimulationSystemGroup)
                         || updateInGroupType == typeof(PresentationSystemGroup))
+                    {
+                        (World.Active.GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
+                    }
+                    else if (data.WorldSystems.Contains(updateInGroupType))
                     {
                         (data.World.GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
                     }
