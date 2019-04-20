@@ -1,5 +1,5 @@
 ﻿/*
- * v1.1.3
+ * v1.2.0
  * */
 
 using CustomWorldBoostrapInternal;
@@ -22,15 +22,15 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
     /// will need updating manually, and there will be no default buffer systems - creating them will
     /// not mean they update in the expected order.
     /// </summary>
-    public bool CreateDefaultWorld = true;
+    public bool CreateDefaultWorld { get; set; } = true;
 
     /// <summary>
     /// Name of world to assign as default world
-    /// Changing this will change the default world
+    /// Setting this will change the default world
     /// The new default world will not have any additional systems
     /// such as the ones for hybrid and sub scenes
     /// </summary>
-    public string DefaultWorldName = "Default World";
+    public string DefaultWorldName { get; set; } = "";
 
     /// <summary>
     /// Accessor for the default world, null if CreateDefaultWorld = false
@@ -49,7 +49,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
         {
             if (m_Initialiser == null)
             {
-                m_Initialiser = new Initialiser(this, CreateDefaultWorld, WorldOptions);
+                m_Initialiser = new Initialiser(this);
             }
             return m_Initialiser;
         }
@@ -87,9 +87,11 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
         public Action<World> OnInitialize;
 
         /// <summary>
-        /// This is not yet implemented
+        /// Use this function to select custom systems to include in world
+        /// The systems returned will be created in this world
+        ///  and will not be created in default world
         /// </summary>
-        public List<Type> FilterTypes = new List<Type>();
+        public Func<List<Type>, List<Type>> CustomIncludeQuery;
 
         public WorldOption(string name)
         {
@@ -127,20 +129,19 @@ namespace CustomWorldBoostrapInternal
             public CustomWorldBootstrap.WorldOption Options;
         }
 
-        public Initialiser(ICustomWorldBootstrap customWorldBootstrap, bool createDefaultWorld = true, List<CustomWorldBootstrap.WorldOption> worldOptions = null, string defaultWorldName = "Default World")
+        public Initialiser(ICustomWorldBootstrap customWorldBootstrap)
         {
             WorldData = new Dictionary<string, WorldInfo>();
-            if (worldOptions != null)
+
+            foreach (var wo in customWorldBootstrap.WorldOptions)
             {
-                foreach (var wo in worldOptions)
-                {
-                    WorldData.Add(wo.Name, new WorldInfo() { Options = wo });
-                }
+                WorldData.Add(wo.Name, new WorldInfo() { Options = wo });
             }
+
             CustomWorlds = new Dictionary<string, World>();
             m_CustomWorldBootstrap = customWorldBootstrap;
-            m_CreateDefaultWorld = createDefaultWorld;
-            m_DefaultWorldName = defaultWorldName;
+            m_CreateDefaultWorld = customWorldBootstrap.CreateDefaultWorld;
+            m_DefaultWorldName = customWorldBootstrap.DefaultWorldName == "" ? m_DefaultWorldName : customWorldBootstrap.DefaultWorldName;
         }
 
         public List<Type> Initialise(List<Type> systems)
@@ -160,6 +161,8 @@ namespace CustomWorldBoostrapInternal
             {
                 World.Active = CustomWorlds[m_DefaultWorldName];
             }
+
+            UpdateSortOrder();
 
             return m_CustomWorldBootstrap.PostInitialize(!m_CreateDefaultWorld || (m_CreateDefaultWorld && m_DefaultWorldName != "Default World") ? null : GetDefaultSystemTypes(systems).ToList());
         }
@@ -200,7 +203,13 @@ namespace CustomWorldBoostrapInternal
 
         private IEnumerable<Type> GetDefaultSystemTypes(List<Type> systems)
         {
-            return systems.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
+            var excludeSystems = new List<Type>();
+            foreach (var worldSystems in WorldData.Select(x => x.Value.WorldSystems))
+            {
+                excludeSystems.AddRange(worldSystems);
+            }
+
+            return systems.Where(type => !excludeSystems.Contains(type)); ;
         }
 
         private void InitialiseEachWorld(List<Type> systems)
@@ -218,7 +227,7 @@ namespace CustomWorldBoostrapInternal
                     continue;
                 }
                 else
-                {                    
+                {
                     data.World = new World(data.Options.Name);
                     CustomWorlds.Add(data.Options.Name, data.World);
 
@@ -232,6 +241,11 @@ namespace CustomWorldBoostrapInternal
                  * Create systems in the world
                  */
                 data.WorldSystems = GetSystemTypesIncludingUpdateInGroupAncestors(data.Options.Name, systems).ToList();
+                if (data.Options.CustomIncludeQuery != null)
+                {
+                    data.WorldSystems.AddRange(data.Options.CustomIncludeQuery(systems));
+                    data.WorldSystems = data.WorldSystems.Distinct().ToList();
+                }
                 foreach (var worldSystemType in data.WorldSystems)
                 {
                     data.World.CreateSystem(worldSystemType);
@@ -262,21 +276,23 @@ namespace CustomWorldBoostrapInternal
                     {
                         throw new Exception(string.Format("System {0} is trying to update in a non ComponentSystemGroup class", createdSystemType.Name));
                     }
+                    ComponentSystemGroup updateGroup;
                     if (updateInGroupType == typeof(InitializationSystemGroup)
                         || updateInGroupType == typeof(SimulationSystemGroup)
                         || updateInGroupType == typeof(PresentationSystemGroup))
                     {
-                        (World.Active.GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
+                        updateGroup = (ComponentSystemGroup)World.Active.GetOrCreateSystem(updateInGroupType);
                     }
                     else if (data.WorldSystems.Contains(updateInGroupType))
                     {
-                        (data.World.GetOrCreateSystem(updateInGroupType) as ComponentSystemGroup).AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
+                        updateGroup = (ComponentSystemGroup)data.World.GetOrCreateSystem(updateInGroupType);
                     }
                     else
                     {
                         Debug.LogWarning(string.Format("Tried to create system {0} in {1} that doesn't exist. Updating in simulation group", createdSystemType.Name, updateInGroupType.Name));
-                        data.World.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
+                        updateGroup = data.World.GetOrCreateSystem<SimulationSystemGroup>();
                     }
+                    updateGroup.AddSystemToUpdateList(data.World.GetOrCreateSystem(createdSystemType));
                 }
                 else
                 {
@@ -285,11 +301,31 @@ namespace CustomWorldBoostrapInternal
             }
         }
 
+        private void UpdateSortOrder()
+        {
+            foreach (var data in WorldData.Values)
+            {
+                foreach (var type in data.WorldSystems)
+                {
+                    if (IsComponentSystemGroup(type))
+                    {
+                        ((ComponentSystemGroup)data.World.GetExistingSystem(type)).SortSystemUpdateList();
+                    }
+                }
+            }
+            if (m_CreateDefaultWorld)
+            {
+                foreach (var t in new Type[] { typeof(InitializationSystemGroup), typeof(SimulationSystemGroup), typeof(PresentationSystemGroup) })
+                {
+                    (World.Active.GetExistingSystem(t) as ComponentSystemGroup).SortSystemUpdateList();
+                }
+            }
+        }
+
         private void PerWorldPostInitialization()
         {
             foreach (World w in WorldData.Select(x => x.Value.World))
             {
-                //ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
                 if (WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
                 {
                     WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
@@ -372,6 +408,9 @@ namespace CustomWorldBoostrapInternal
 
     public interface ICustomWorldBootstrap
     {
+        bool CreateDefaultWorld { get; set; }
+        string DefaultWorldName { get; set; }
+        List<CustomWorldBootstrap.WorldOption> WorldOptions { get; }
         List<Type> PostInitialize(List<Type> systems);
     }
 

@@ -1,7 +1,7 @@
 ﻿using CustomWorldBoostrapInternal;
 using NUnit.Framework;
-using Unity.Entities;
 using System.Linq;
+using Unity.Entities;
 
 namespace Tests
 {
@@ -18,7 +18,7 @@ namespace Tests
         [Test]
         public void Setting_CreateDefaultWorld_False_Produces_Null()
         {
-            var init = new Initialiser(m_FakeCWB, false);
+            var init = new Initialiser(new FakeCustomWorldBootstrap(null, false));
             Assert.IsNull(init.Initialise(DefaultSystems));
         }
 
@@ -34,14 +34,15 @@ namespace Tests
         public void Should_Create_A_New_Default_World_With_10_Default_Systems()
         {
             new Initialiser(
-                m_FakeCWB,
-                true,
-                new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption> {
-                    new CustomWorldBootstrap.WorldOption("Test A")
-                },
-                "Test A")
+                new FakeCustomWorldBootstrap(
+                     new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption> {
+                        new CustomWorldBootstrap.WorldOption("Test A")
+                     },
+                     true,
+                     "Test A"
+                     ))
                 .Initialise(m_DefaultSystems);
-            Assert.IsTrue(World.AllWorlds.Any(x=>x.Name=="Test A"));
+            Assert.IsTrue(World.AllWorlds.Any(x => x.Name == "Test A"));
             Assert.AreSame("Test A", World.Active.Name);
             Assert.AreEqual(10, World.Active.Systems.Count());
         }
@@ -49,13 +50,15 @@ namespace Tests
         [Test]
         public void Should_Return_Null_When_Creating_A_New_Default_World()
         {
-            Assert.IsNull(new Initialiser(
-                m_FakeCWB,
-                true,
-                new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption> {
-                    new CustomWorldBootstrap.WorldOption("Test A")
-                },
-                "Test A")
+            Assert.IsNull(
+                new Initialiser(
+                    new FakeCustomWorldBootstrap(
+                        new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption> {
+                            new CustomWorldBootstrap.WorldOption("Test A")
+                        },
+                        true,
+                        "Test A"
+                        ))
                 .Initialise(m_DefaultSystems));
         }
     }
