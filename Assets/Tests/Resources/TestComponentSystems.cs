@@ -28,7 +28,6 @@ namespace Tests
 
     }
 
-
     [DisableAutoCreation]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [CreateInWorld("Test3 World")]
@@ -36,6 +35,7 @@ namespace Tests
     {
 
     }
+
     [DisableAutoCreation]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [CreateInWorld("Test3 World")]
@@ -43,6 +43,7 @@ namespace Tests
     {
 
     }
+
     [DisableAutoCreation]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [CreateInWorld("Test3 World")]
@@ -65,7 +66,6 @@ namespace Tests
     {
 
     }
-
 
     [DisableAutoCreation]
     [CreateInWorld("Test5 World")]

@@ -260,7 +260,7 @@ namespace CustomWorldBoostrapInternal
         {
             foreach (World w in WorldData.Select(x => x.Value.World))
             {
-                ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
+                //ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w);
                 if (WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
                 {
                     WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
