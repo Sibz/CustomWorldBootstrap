@@ -1,5 +1,7 @@
-﻿using NUnit.Framework;
-using CustomWorldBoostrapInternal;
+﻿using CustomWorldBoostrapInternal;
+using NUnit.Framework;
+using Unity.Entities;
+using System.Linq;
 
 namespace Tests
 {
@@ -26,6 +28,35 @@ namespace Tests
             m_DefaultSystems.Add(typeof(Test1));
             var newSystems = new Initialiser(m_FakeCWB).Initialise(m_DefaultSystems);
             Assert.Contains(typeof(Test1), newSystems);
+        }
+
+        [Test]
+        public void Should_Create_A_New_Default_World_With_10_Default_Systems()
+        {
+            new Initialiser(
+                m_FakeCWB,
+                true,
+                new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption> {
+                    new CustomWorldBootstrap.WorldOption("Test A")
+                },
+                "Test A")
+                .Initialise(m_DefaultSystems);
+            Assert.IsTrue(World.AllWorlds.Any(x=>x.Name=="Test A"));
+            Assert.AreSame("Test A", World.Active.Name);
+            Assert.AreEqual(10, World.Active.Systems.Count());
+        }
+
+        [Test]
+        public void Should_Return_Null_When_Creating_A_New_Default_World()
+        {
+            Assert.IsNull(new Initialiser(
+                m_FakeCWB,
+                true,
+                new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption> {
+                    new CustomWorldBootstrap.WorldOption("Test A")
+                },
+                "Test A")
+                .Initialise(m_DefaultSystems));
         }
     }
 }

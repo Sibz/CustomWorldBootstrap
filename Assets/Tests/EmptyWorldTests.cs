@@ -34,7 +34,7 @@ namespace Tests
         [Test]
         public void World_Is_Has_No_NonDefault_Systems()
         {
-            Assert.IsEmpty(GetWorld(WORLDNAME).Systems.Where(x => !m_InitialSystems.Contains(x.GetType())));
+            Assert.IsEmpty(GetWorld(WORLDNAME).Systems);
         }
     }
 }

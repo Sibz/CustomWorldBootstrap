@@ -42,7 +42,7 @@ namespace Tests
         {
             var world = GetWorld(WORLDNAME);
 
-            world.GetExistingSystem<SimulationSystemGroup>().Update();
+            World.Active.GetExistingSystem<SimulationSystemGroup>().Update();
             Assert.IsTrue(world.GetExistingSystem<Test4_System>().Updated);
         }
     }

@@ -45,7 +45,7 @@ namespace Tests
         public void System_Updates_In_UpdateGroup()
         {
             var world = GetWorld(WORLDNAME);
-            world.GetExistingSystem<SimulationSystemGroup>().Update();
+            World.Active.GetExistingSystem<SimulationSystemGroup>().Update();
             Assert.IsTrue(world.GetExistingSystem<Test5_System>().Updated);
         }
     }

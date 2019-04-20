@@ -54,7 +54,7 @@ namespace Tests
             simSys.Updated = false;
             presSys.Updated = false;
 
-            world.GetExistingSystem<InitializationSystemGroup>().Update();
+            World.Active.GetExistingSystem<InitializationSystemGroup>().Update();
 
             Assert.IsTrue(world.GetExistingSystem<Test3_InitializationSystem>().Updated);
             Assert.IsFalse(world.GetExistingSystem<Test3_SimulationSystem>().Updated);
@@ -73,7 +73,7 @@ namespace Tests
             simSys.Updated = false;
             presSys.Updated = false;
 
-            world.GetExistingSystem<SimulationSystemGroup>().Update();
+            World.Active.GetExistingSystem<SimulationSystemGroup>().Update();
 
             Assert.IsFalse(world.GetExistingSystem<Test3_InitializationSystem>().Updated);
             Assert.IsTrue(world.GetExistingSystem<Test3_SimulationSystem>().Updated);
@@ -92,7 +92,7 @@ namespace Tests
             simSys.Updated = false;
             presSys.Updated = false;
 
-            world.GetExistingSystem<PresentationSystemGroup>().Update();
+            World.Active.GetExistingSystem<PresentationSystemGroup>().Update();
 
             Assert.IsFalse(world.GetExistingSystem<Test3_InitializationSystem>().Updated);
             Assert.IsFalse(world.GetExistingSystem<Test3_SimulationSystem>().Updated);
