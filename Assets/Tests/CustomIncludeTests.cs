@@ -18,14 +18,12 @@ namespace Tests
             base.OneTimeSetup();
             m_DefaultSystems.Add(typeof(Test7_System));
             new Initialiser(
-                m_FakeCWB,
-                true,
-                new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption>() {
+                new FakeCustomWorldBootstrap(new System.Collections.Generic.List<CustomWorldBootstrap.WorldOption>() {
                     new CustomWorldBootstrap.WorldOption(WORLDNAME) {
                         CustomIncludeQuery = systems=>systems
                         .Where(system=>system.GetInterfaces().Any(iface=>iface.Name== nameof(ITest7))).ToList()
                     }
-                }).Initialise(m_DefaultSystems);
+                })).Initialise(m_DefaultSystems);
         }
 
         [Test]

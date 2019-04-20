@@ -1,7 +1,7 @@
-﻿using NUnit.Framework;
+﻿using CustomWorldBoostrapInternal;
+using NUnit.Framework;
 using System.Collections.Generic;
 using Unity.Entities;
-using CustomWorldBoostrapInternal;
 
 
 namespace Tests
@@ -17,11 +17,11 @@ namespace Tests
         protected override void OneTimeSetup()
         {
             base.OneTimeSetup();
-            new Initialiser(m_FakeCWB, true, new List<CustomWorldBootstrap.WorldOption>()
+            new Initialiser(new FakeCustomWorldBootstrap(new List<CustomWorldBootstrap.WorldOption>()
             {
                 new CustomWorldBootstrap.WorldOption(WorldAName) { OnInitialize = PostWorldAIntialize },
                 new CustomWorldBootstrap.WorldOption(WorldBName) { OnInitialize = PostWorldBIntialize }
-            }).Initialise(m_DefaultSystems);
+            })).Initialise(m_DefaultSystems);
         }
 
         [Test]

@@ -22,7 +22,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
     /// will need updating manually, and there will be no default buffer systems - creating them will
     /// not mean they update in the expected order.
     /// </summary>
-    public bool CreateDefaultWorld = true;
+    public bool CreateDefaultWorld { get; set; } = true;
 
     /// <summary>
     /// Name of world to assign as default world
@@ -30,7 +30,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
     /// The new default world will not have any additional systems
     /// such as the ones for hybrid and sub scenes
     /// </summary>
-    public string DefaultWorldName = "";
+    public string DefaultWorldName { get; set; } = "";
 
     /// <summary>
     /// Accessor for the default world, null if CreateDefaultWorld = false
@@ -49,7 +49,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
         {
             if (m_Initialiser == null)
             {
-                m_Initialiser = new Initialiser(this, CreateDefaultWorld, WorldOptions, DefaultWorldName == "" ? "Default World" : DefaultWorldName);
+                m_Initialiser = new Initialiser(this);
             }
             return m_Initialiser;
         }
@@ -129,20 +129,19 @@ namespace CustomWorldBoostrapInternal
             public CustomWorldBootstrap.WorldOption Options;
         }
 
-        public Initialiser(ICustomWorldBootstrap customWorldBootstrap, bool createDefaultWorld = true, List<CustomWorldBootstrap.WorldOption> worldOptions = null, string defaultWorldName = "Default World")
+        public Initialiser(ICustomWorldBootstrap customWorldBootstrap)
         {
             WorldData = new Dictionary<string, WorldInfo>();
-            if (worldOptions != null)
+
+            foreach (var wo in customWorldBootstrap.WorldOptions)
             {
-                foreach (var wo in worldOptions)
-                {
-                    WorldData.Add(wo.Name, new WorldInfo() { Options = wo });
-                }
+                WorldData.Add(wo.Name, new WorldInfo() { Options = wo });
             }
+
             CustomWorlds = new Dictionary<string, World>();
             m_CustomWorldBootstrap = customWorldBootstrap;
-            m_CreateDefaultWorld = createDefaultWorld;
-            m_DefaultWorldName = defaultWorldName;
+            m_CreateDefaultWorld = customWorldBootstrap.CreateDefaultWorld;
+            m_DefaultWorldName = customWorldBootstrap.DefaultWorldName == "" ? m_DefaultWorldName : customWorldBootstrap.DefaultWorldName;
         }
 
         public List<Type> Initialise(List<Type> systems)
@@ -409,6 +408,9 @@ namespace CustomWorldBoostrapInternal
 
     public interface ICustomWorldBootstrap
     {
+        bool CreateDefaultWorld { get; set; }
+        string DefaultWorldName { get; set; }
+        List<CustomWorldBootstrap.WorldOption> WorldOptions { get; }
         List<Type> PostInitialize(List<Type> systems);
     }
 
