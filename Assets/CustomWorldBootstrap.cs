@@ -26,11 +26,11 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
 
     /// <summary>
     /// Name of world to assign as default world
-    /// Changing this will change the default world
+    /// Setting this will change the default world
     /// The new default world will not have any additional systems
     /// such as the ones for hybrid and sub scenes
     /// </summary>
-    public string DefaultWorldName = "Default World";
+    public string DefaultWorldName = "";
 
     /// <summary>
     /// Accessor for the default world, null if CreateDefaultWorld = false
@@ -49,7 +49,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
         {
             if (m_Initialiser == null)
             {
-                m_Initialiser = new Initialiser(this, CreateDefaultWorld, WorldOptions);
+                m_Initialiser = new Initialiser(this, CreateDefaultWorld, WorldOptions, DefaultWorldName == "" ? "Default World" : DefaultWorldName);
             }
             return m_Initialiser;
         }
