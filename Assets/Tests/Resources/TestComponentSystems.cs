@@ -95,6 +95,7 @@ namespace Tests
     public class Test6_Group: ComponentSystemGroup
     {
         public string UpdateOrder = "";
+        public string UpdateOrderB = "";
     }
 
     [DisableAutoCreation]
@@ -134,6 +135,42 @@ namespace Tests
             World.GetExistingSystem<Test6_Group>().UpdateOrder += "3";
         }
     }
+
+    [DisableAutoCreation]
+    [CreateInWorld("Test6 World")]
+    [UpdateAfter(typeof(Test6_System2b))]
+    public class Test6_System1b : UpdateableSystem
+    {
+        protected override void OnUpdate()
+        {
+            base.OnUpdate();
+            World.GetExistingSystem<Test6_Group>().UpdateOrderB += "1";
+        }
+    }
+
+    [DisableAutoCreation]
+    [CreateInWorld("Test6 World")]
+    public class Test6_System2b : UpdateableSystem
+    {
+        protected override void OnUpdate()
+        {
+            base.OnUpdate();
+            World.GetExistingSystem<Test6_Group>().UpdateOrderB += "2";
+        }
+    }
+
+    [DisableAutoCreation]
+    [CreateInWorld("Test6 World")]
+    [UpdateBefore(typeof(Test6_System2b))]
+    public class Test6_System3b : UpdateableSystem
+    {
+        protected override void OnUpdate()
+        {
+            base.OnUpdate();
+            World.GetExistingSystem<Test6_Group>().UpdateOrderB += "3";
+        }
+    }
+
 
     [DisableAutoCreation]
     public class Test7_System : UpdateableSystem, ITest7
