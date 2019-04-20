@@ -111,4 +111,10 @@ namespace Tests
     {
 
     }
+    [DisableAutoCreation]
+    public class Test7_System : UpdateableSystem, ITest7
+    {
+
+    }
+    public interface ITest7 { }
 }

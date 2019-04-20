@@ -87,9 +87,11 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
         public Action<World> OnInitialize;
 
         /// <summary>
-        /// This is not yet implemented
+        /// Use this function to select custom systems to include in world
+        /// The systems returned will be created in this world
+        ///  and will not be created in default world
         /// </summary>
-        public List<Type> FilterTypes = new List<Type>();
+        public Func<List<Type>, List<Type>> CustomIncludeFilter;
 
         public WorldOption(string name)
         {
@@ -200,7 +202,13 @@ namespace CustomWorldBoostrapInternal
 
         private IEnumerable<Type> GetDefaultSystemTypes(List<Type> systems)
         {
-            return systems.Where(x => !x.CustomAttributes.Any(n => n.AttributeType.Name == nameof(CreateInWorldAttribute)));
+            var excludeSystems = new List<Type>();
+            foreach (var worldSystems in WorldData.Select(x => x.Value.WorldSystems))
+            {
+                excludeSystems.AddRange(worldSystems);
+            }
+
+            return systems.Where(type => !excludeSystems.Contains(type)); ;
         }
 
         private void InitialiseEachWorld(List<Type> systems)
@@ -232,6 +240,11 @@ namespace CustomWorldBoostrapInternal
                  * Create systems in the world
                  */
                 data.WorldSystems = GetSystemTypesIncludingUpdateInGroupAncestors(data.Options.Name, systems).ToList();
+                if(data.Options.CustomIncludeFilter!=null)
+                {
+                    data.WorldSystems.AddRange(data.Options.CustomIncludeFilter(systems));
+                    data.WorldSystems = data.WorldSystems.Distinct().ToList();
+                }
                 foreach (var worldSystemType in data.WorldSystems)
                 {
                     data.World.CreateSystem(worldSystemType);
