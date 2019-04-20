@@ -1,5 +1,5 @@
 ﻿/*
- * v1.1.2
+ * v1.1.3
  * */
 
 using CustomWorldBoostrapInternal;
@@ -15,6 +15,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
     /// Per world options
     /// </summary>
     public List<WorldOption> WorldOptions { get; } = new List<WorldOption>();
+
     /// <summary>
     /// Set false to disable the default world creation
     /// </summary>
