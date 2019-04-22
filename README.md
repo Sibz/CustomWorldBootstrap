@@ -3,6 +3,9 @@
 </a>
 
 # CustomWorldBootstrap
+**v1.2.1 Changes**
+* Fixed null reference issue when not using CreateInWorld attribute but specifying systems via the CustomIncludeQuery
+
 **v1.2.0 Changes**
 * Added option for including systems based on a custom query
 See **World Options** below for more information
