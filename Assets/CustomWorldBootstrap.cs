@@ -1,5 +1,5 @@
 ﻿/*
- * v1.2.0
+ * v1.2.1
  * */
 
 using CustomWorldBoostrapInternal;
@@ -317,7 +317,7 @@ namespace CustomWorldBoostrapInternal
             {
                 foreach (var t in new Type[] { typeof(InitializationSystemGroup), typeof(SimulationSystemGroup), typeof(PresentationSystemGroup) })
                 {
-                    (World.Active.GetExistingSystem(t) as ComponentSystemGroup).SortSystemUpdateList();
+                    (World.Active.GetOrCreateSystem(t) as ComponentSystemGroup).SortSystemUpdateList();
                 }
             }
         }
