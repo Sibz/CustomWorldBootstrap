@@ -1,5 +1,5 @@
 ﻿/*
- * v1.2.1
+ * v1.2.2
  * */
 
 using CustomWorldBoostrapInternal;
@@ -324,11 +324,12 @@ namespace CustomWorldBoostrapInternal
 
         private void PerWorldPostInitialization()
         {
-            foreach (World w in WorldData.Select(x => x.Value.World))
+            foreach (var w in WorldData.Values)
             {
-                if (WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize != null)
+                ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w.World);
+                if (w.Options.OnInitialize != null)
                 {
-                    WorldData.Select(x => x.Value.Options).Where(x => x.Name == w.Name).FirstOrDefault().OnInitialize.Invoke(w);
+                    w.Options.OnInitialize.Invoke(w.World);
                 }
             }
         }
