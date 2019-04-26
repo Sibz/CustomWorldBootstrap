@@ -326,7 +326,6 @@ namespace CustomWorldBoostrapInternal
         {
             foreach (var w in WorldData.Values)
             {
-                ScriptBehaviourUpdateOrder.UpdatePlayerLoop(w.World);
                 if (w.Options.OnInitialize != null)
                 {
                     w.Options.OnInitialize.Invoke(w.World);
