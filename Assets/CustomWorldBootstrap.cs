@@ -4,6 +4,7 @@
 
 using CustomWorldBoostrapInternal;
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Entities;
@@ -93,6 +94,12 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
         /// </summary>
         public Func<List<Type>, List<Type>> CustomIncludeQuery;
 
+        /// <summary>
+        /// This will duplicate matching systems into this world
+        /// *Note you cannot use it for Initialization/Simulation/Presentation and their associated buffer systems*
+        /// </summary>
+        public Func<List<Type>, List<Type>> DuplicateSystemsQuery;
+
         public WorldOption(string name)
         {
             Name = name;
@@ -121,6 +128,8 @@ namespace CustomWorldBoostrapInternal
         private readonly bool m_CreateDefaultWorld = true;
         private Dictionary<string, WorldInfo> WorldData { get; }
         private string m_DefaultWorldName = "Default World";
+
+        private int m_WorldUpdateGroupIndex = 0;
 
         private class WorldInfo
         {
@@ -204,9 +213,14 @@ namespace CustomWorldBoostrapInternal
         private IEnumerable<Type> GetDefaultSystemTypes(List<Type> systems)
         {
             var excludeSystems = new List<Type>();
-            foreach (var worldSystems in WorldData.Select(x => x.Value.WorldSystems))
+            foreach (var data in WorldData.Values)
             {
-                excludeSystems.AddRange(worldSystems);
+                excludeSystems.AddRange(data.WorldSystems);
+                if (data.Options.DuplicateSystemsQuery != null)
+                {
+                    var toDuplicate = data.Options.DuplicateSystemsQuery(systems);
+                    excludeSystems.RemoveAll(type => toDuplicate.Contains(type));
+                }
             }
 
             return systems.Where(type => !excludeSystems.Contains(type)); ;
@@ -246,6 +260,11 @@ namespace CustomWorldBoostrapInternal
                     data.WorldSystems.AddRange(data.Options.CustomIncludeQuery(systems));
                     data.WorldSystems = data.WorldSystems.Distinct().ToList();
                 }
+                if (data.Options.DuplicateSystemsQuery != null)
+                {
+                    data.WorldSystems.AddRange(data.Options.DuplicateSystemsQuery(systems));
+                    data.WorldSystems = data.WorldSystems.Distinct().ToList();
+                }
                 foreach (var worldSystemType in data.WorldSystems)
                 {
                     data.World.CreateSystem(worldSystemType);
@@ -281,7 +300,7 @@ namespace CustomWorldBoostrapInternal
                         || updateInGroupType == typeof(SimulationSystemGroup)
                         || updateInGroupType == typeof(PresentationSystemGroup))
                     {
-                        updateGroup = (ComponentSystemGroup)World.Active.GetOrCreateSystem(updateInGroupType);
+                        updateGroup = (ComponentSystemGroup)data.World.GetOrCreateSystem(updateInGroupType);
                     }
                     else if (data.WorldSystems.Contains(updateInGroupType))
                     {
@@ -296,8 +315,35 @@ namespace CustomWorldBoostrapInternal
                 }
                 else
                 {
-                    World.Active.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(data.World.GetExistingSystem(createdSystemType));
+                    data.World.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(data.World.GetExistingSystem(createdSystemType));
                 }
+            }
+
+            if (m_CreateDefaultWorld && m_DefaultWorldName != data.World.Name)
+            {
+                if (data.World.Systems.Any(system => system.GetType() == typeof(InitializationSystemGroup)))
+                {
+                    var t = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.Name == "WorldInitUpdateGroup" + m_WorldUpdateGroupIndex).First();
+                    ComponentSystemGroup baseSystem = (ComponentSystemGroup)data.World.CreateSystem(t);
+                    baseSystem.AddSystemToUpdateList(data.World.Systems.Where(system => system.GetType() == typeof(InitializationSystemGroup)).FirstOrDefault());
+                    World.Active.GetOrCreateSystem<InitializationSystemGroup>().AddSystemToUpdateList(baseSystem);
+
+                }
+                if (data.World.Systems.Any(system => system.GetType() == typeof(SimulationSystemGroup)))
+                {
+                    var t = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.Name == "WorldSimUpdateGroup" + m_WorldUpdateGroupIndex).First();
+                    ComponentSystemGroup baseSystem = (ComponentSystemGroup)data.World.CreateSystem(t);
+                    baseSystem.AddSystemToUpdateList(data.World.Systems.Where(system => system.GetType() == typeof(SimulationSystemGroup)).FirstOrDefault());
+                    World.Active.GetOrCreateSystem<SimulationSystemGroup>().AddSystemToUpdateList(baseSystem);
+                }
+                if (data.World.Systems.Any(system => system.GetType() == typeof(PresentationSystemGroup)))
+                {
+                    var t = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.Name == "WorldPresUpdateGroup" + m_WorldUpdateGroupIndex).First();
+                    ComponentSystemGroup baseSystem = (ComponentSystemGroup)data.World.CreateSystem(t);
+                    baseSystem.AddSystemToUpdateList(data.World.Systems.Where(system => system.GetType() == typeof(PresentationSystemGroup)).FirstOrDefault());
+                    World.Active.GetOrCreateSystem<PresentationSystemGroup>().AddSystemToUpdateList(baseSystem);
+                }
+                m_WorldUpdateGroupIndex++;
             }
         }
 
@@ -419,4 +465,37 @@ namespace CustomWorldBoostrapInternal
     {
         public WorldOption(string name) : base(name) { }
     }
+
+    [DisableAutoCreation] public class WorldInitUpdateGroup0 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup1 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup2 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup3 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup4 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup5 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup6 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup7 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup8 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldInitUpdateGroup9 : ComponentSystemGroup { }
+
+    [DisableAutoCreation] public class WorldSimUpdateGroup0 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup1 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup2 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup3 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup4 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup5 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup6 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup7 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup8 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldSimUpdateGroup9 : ComponentSystemGroup { }
+
+    [DisableAutoCreation] public class WorldPresUpdateGroup0 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup1 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup2 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup3 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup4 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup5 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup6 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup7 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup8 : ComponentSystemGroup { }
+    [DisableAutoCreation] public class WorldPresUpdateGroup9 : ComponentSystemGroup { }
 }
