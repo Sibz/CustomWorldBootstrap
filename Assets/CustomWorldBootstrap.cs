@@ -4,9 +4,9 @@
 
 using CustomWorldBoostrapInternal;
 using System;
-using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Unity.Entities;
 using UnityEngine;
 
@@ -56,6 +56,7 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
         }
     }
 
+    private bool HasRun = false;
     /// <summary>
     /// Override this function to customise the list of systems to be creating in the default world
     /// </summary>
@@ -68,6 +69,12 @@ public abstract class CustomWorldBootstrap : ICustomBootstrap, ICustomWorldBoots
 
     public List<Type> Initialize(List<Type> systems)
     {
+        if (HasRun)
+        {
+            return systems;
+        }
+        HasRun = true;
+
         systems = Initialiser.Initialise(systems);
 
         DefaultWorld = World.Active;
@@ -222,6 +229,9 @@ namespace CustomWorldBoostrapInternal
                     excludeSystems.RemoveAll(type => toDuplicate.Contains(type));
                 }
             }
+            excludeSystems.Remove(typeof(InitializationSystemGroup));
+            excludeSystems.Remove(typeof(SimulationSystemGroup));
+            excludeSystems.Remove(typeof(PresentationSystemGroup));
 
             return systems.Where(type => !excludeSystems.Contains(type)); ;
         }
