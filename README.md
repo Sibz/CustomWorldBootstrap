@@ -1,6 +1,10 @@
-<a href="http://tcci.3utilities.com/viewType.html?buildTypeId=ShortID&guest=1"> 
-<img src="http://tcci.3utilities.com/app/rest/builds/buildType(id:ShortID)/statusIcon"/>
-</a>
+When I wrote this Custom Worlds were in a bit of a mess and changed during the development of this project.
+
+Since then Knightmore has created a clean solution that I can recommend:
+https://github.com/Knightmore/MultiWorldBootstrap
+
+I'll leave this repo here for prosperity.
+
 
 # CustomWorldBootstrap
 
